@@ -1,0 +1,4 @@
+conda create --name robotics python
+source activate robotics
+conda install -c https://conda.anaconda.org/dlr-sc pythonocc-core
+
