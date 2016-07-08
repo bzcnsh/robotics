@@ -16,6 +16,9 @@ import time
 from OCC.BRepOffsetAPI import BRepOffsetAPI_MakePipe, BRepOffsetAPI_MakePipeShell
 from OCC.BRepExtrema import BRepExtrema_DistShapeShape
 from OCC.TopTools import TopTools_ListOfShape
+from pprint import pprint
+
+display, start_display, add_menu, add_function_to_menu = init_display()
 
 def slicer(shape, deltaZ):
     # Param
@@ -41,6 +44,40 @@ def slicer(shape, deltaZ):
     print("%.3fs necessary to perform slice." % total_time)
     return sections
 
+def get_connected_face_hash(whole_shape, part_shape, hash_faces):
+    #whole_shape is the whole shape, can have multiple separate faces
+    #return a hash of all faces connected to part_shape, whether directly or indirectly
+    #the value of hash is 1, have to loop through Topo(whole_shape).faces to get to the faces
+    topo_w = Topo(whole_shape)
+    topo_p = Topo(part_shape)
+    new_faces = {}
+    for v in topo_p.vertices():
+        for f in topo_w.faces_from_vertex(v):
+            if not f.__hash__() in hash_faces:
+                hash_faces[f.__hash__()] = 1
+                new_faces[f.__hash__()]=f
+    for k, v in new_faces.items():
+        get_connected_face_hash(whole_shape, v, hash_faces)
+
+def get_connected_edge_hash(whole_shape, part_shape, hash_edges):
+    #whole_shape is the whole shape, can have multiple separate edges
+    #return a hash of all edges connected to part_shape, whether directly or indirectly
+    #the value of hash is 1, have to loop through Topo(whole_shape).edges to get to the edges
+    topo_w = Topo(whole_shape)
+    topo_p = Topo(part_shape)
+    new_edges = {}
+    #loop through vertices in part
+    #   loop through edges connected to a vertex in whole
+    #       add the edge to hash_edges
+    #loop through all vertices of new edges
+    for v in topo_p.vertices():
+        for e in topo_w.edges_from_vertex(v):
+            if not e.__hash__() in hash_edges:
+                hash_edges[e.__hash__()] = 1
+                new_edges[e.__hash__()]=e
+    for k, v in new_edges.items():
+        get_connected_edge_hash(whole_shape, v, hash_edges)
+
 def get_front_surface(stl_file, p1, p2):
     stl_reader = StlAPI_Reader()
     stl_box = TopoDS_Shape()
@@ -48,21 +85,66 @@ def get_front_surface(stl_file, p1, p2):
     box = BRepPrimAPI_MakeBox(p1, p2).Shape()
     CommonSurface = BRepAlgoAPI_Common(box, stl_box).Shape()
     topo = Topo(CommonSurface)
-    x_min_min = 100
-    #remove back surface, which is a rectange at a fixed X
+
+    #ais_stl_box = display.DisplayShape(stl_box)
+    #ais_box = display.DisplayShape(box)
+    #display.Context.SetTransparency(ais_box, 0.8)
+    #display.Context.SetTransparency(ais_stl_box, 0.5)
+
+    distance = BRepExtrema_DistShapeShape()
+    orig = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeVertex(gp_Pnt(0,0,0))
+    distance.LoadS1(orig.Shape())
+    min_distance = 999999999
+    face_near = None
     for face in topo.faces():
-        bbox = Bnd_Box()
-        OCC.BRepBndLib.brepbndlib_Add(face, bbox)
-        xmin, ymin, zmin, xmax, ymax, zmax = bbox.Get()
-        if xmin<=x_min_min:
-            x_min_min=xmin
-    for face in topo.faces():
-        bbox = Bnd_Box()
-        OCC.BRepBndLib.brepbndlib_Add(face, bbox)
-        xmin, ymin, zmin, xmax, ymax, zmax = bbox.Get()
-        if xmin==x_min_min:
-            CommonSurface = BRepAlgoAPI_Cut(CommonSurface, face).Shape()
+        distance.LoadS2(face)
+        distance.Perform()
+        if not distance.IsDone():
+            print("waiting for distance")
+            time.sleep(1)
+        d = distance.Value()
+        if d<min_distance:
+            min_distance = d
+            face_near = face
+    #face_near is nearest from the origin, remove all faces not connected to it
+    hash_faces = {}
+    get_connected_face_hash(CommonSurface, face_near, hash_faces)
+    for f in topo.faces():
+        if f.__hash__() not in hash_faces:
+            CommonSurface = BRepAlgoAPI_Cut(CommonSurface, f).Shape()
     return CommonSurface
+
+def get_wires_from_section(section):
+    #result of an intersection between two shapes can be multiple discontinued wires, find each of them and return a list of wires
+    topo_s = Topo(section.Shape())
+    wires = []
+    for e in topo_s.edges():
+        found_edge_in_wire = False
+        e_hash = e.__hash__()
+        for w in wires:
+            if e_hash in w:
+                found_edge_in_wire = True
+        if not found_edge_in_wire:
+            new_wire = {}
+            get_connected_edge_hash(section.Shape(), e, new_wire)
+            wires.append(new_wire)
+
+    for e in topo_s.edges():
+        e_hash = e.__hash__()
+        for w in wires:
+            if e_hash in w:
+                w[e_hash] = e
+    occ_wires = []
+    for w in wires:
+        occ_seq = TopTools_ListOfShape()
+        wire_make = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeWire()
+        for h, e in w.items():
+            occ_seq.Append(e)
+        wire_make.Add(occ_seq)
+        occ_wires.append(wire_make)
+        OCCUtils.Topology.dumpTopology(wire_make.Shape())
+    #time.sleep(10)
+
 
 #create sections along Z axis
 #find the longest intersection line
@@ -72,13 +154,12 @@ def get_front_surface(stl_file, p1, p2):
 
 def get_lowest_long_slice(aShape, zDelta):
     #create sections along Z axis
-    slices = slicer(front_face, zDelta)
+    slices = slicer(aShape, zDelta)
     max_slice_length=-1
     max_slice = None
     for s in slices:
         #find the longest intersection line with the smallest z value
         #slices start from small z
-        OCCUtils.Topology.dumpTopology(s.Shape())
         slice_length=0
         for e in Topo(s.Shape()).edges():
             oe = OCCUtils.edge.Edge(e)
@@ -112,18 +193,20 @@ def getStripBoundary(aShape, spine, strip_width):
 def sweep_face(aFace, initial_section, sweep_width):
     sweep_wires = []
     section = initial_section
-    last_z = -100
+    initial_z = 999999999
+    last_z = -initial_z
     while section:
+        section_wires = get_wires_from_section(section)
         #a section might have multiple edges, only move up
-        valid_edges = []
-        min_valid_z = -100
+        valid_wires = []
+        min_valid_z = -initial_z
         for e in Topo(section.Shape()).edges():
             edge_bbox = Bnd_Box()
             OCC.BRepBndLib.brepbndlib_Add(e, edge_bbox)
             edge_xmin, edge_ymin, edge_zmin, edge_xmax, edge_ymax, edge_zmax = edge_bbox.Get()
             if edge_zmin > last_z+0.01:
                 valid_edges.append(e)
-                if edge_zmin<min_valid_z or min_valid_z==-100:
+                if edge_zmin<min_valid_z or min_valid_z==-initial_z:
                     min_valid_z = edge_zmin
         if valid_edges:
             occ_seq = TopTools_ListOfShape()
@@ -144,7 +227,6 @@ def sweep_face(aFace, initial_section, sweep_width):
             section=None
     return sweep_wires
 
-display, start_display, add_menu, add_function_to_menu = init_display()
 #my_box = BRepPrimAPI_MakeBox(10., 20., 30.).Shape()
 
 #'./models/box.stl'
@@ -156,11 +238,11 @@ stl_reader.Read(stl_box, './models/cylindar.stl')
 
 front_face = get_front_surface('./models/cylindar.stl', gp_Pnt(100.0, 0.0, -500), gp_Pnt(1100.0, 4000.0, 500.0))
 long_slice = get_lowest_long_slice(front_face, 20)
-sweep_wires = sweep_face(front_face, long_slice, 5)
+OCCUtils.Topology.dumpTopology(long_slice.Shape())
+sweep_wires = sweep_face(front_face, long_slice, 50)
 
-OCCUtils.Topology.dumpTopology(front_face)
-display.DisplayShape(front_face)
-
+#display.DisplayShape(front_face)
+print(len(sweep_wires))
 for l in sweep_wires:
     display.DisplayShape(l.Shape())
 
