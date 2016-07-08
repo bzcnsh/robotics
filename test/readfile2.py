@@ -115,6 +115,8 @@ def get_front_surface(stl_file, p1, p2):
     return CommonSurface
 
 def get_wires_from_section(section):
+    print("get_wires_from_section 001")
+    OCCUtils.Topology.dumpTopology(section.Shape())
     #result of an intersection between two shapes can be multiple discontinued wires, find each of them and return a list of wires
     topo_s = Topo(section.Shape())
     wires = []
@@ -141,8 +143,13 @@ def get_wires_from_section(section):
         for h, e in w.items():
             occ_seq.Append(e)
         wire_make.Add(occ_seq)
-        occ_wires.append(wire_make)
-        OCCUtils.Topology.dumpTopology(wire_make.Shape())
+        occ_wires.append(wire_make.Wire())
+    for w in occ_wires:
+        e_l = get_edges_length(w)
+        print("wire length %.3fs " % e_l)
+        OCCUtils.Topology.dumpTopology(w)
+
+    return occ_wires
     #time.sleep(10)
 
 
@@ -152,6 +159,13 @@ def get_wires_from_section(section):
 #find the pipe's intersection line on the surface
 #sweep along this line
 
+def get_edges_length(aShape):
+    t_length = 0
+    for e in Topo(aShape).edges():
+        oe = OCCUtils.edge.Edge(e)
+        t_length += oe.length()
+    return t_length
+
 def get_lowest_long_slice(aShape, zDelta):
     #create sections along Z axis
     slices = slicer(aShape, zDelta)
@@ -160,34 +174,34 @@ def get_lowest_long_slice(aShape, zDelta):
     for s in slices:
         #find the longest intersection line with the smallest z value
         #slices start from small z
-        slice_length=0
-        for e in Topo(s.Shape()).edges():
-            oe = OCCUtils.edge.Edge(e)
-            slice_length += oe.length()
+        slice_length=get_edges_length(s.Shape())
         if slice_length > max_slice_length+0.01:
             max_slice_length = slice_length
             max_slice = s
     return max_slice
 
 def getStripBoundary(aShape, spine, strip_width):
-    #print("0000000")
-    #OCCUtils.Topology.dumpTopology(spine.Shape())
+    print("getStripBoundary 0000*********")
+    OCCUtils.Topology.dumpTopology(spine)
+    print(spine)
     brt = OCC.BRep.BRep_Tool()
-    edges = Topo(spine.Shape()).edges()
-    vertices = Topo(edges.next()).vertices()
-    pnt = brt.Pnt(vertices.next())
+    pnt = brt.Pnt(Topo(spine).ordered_vertices_from_wire(spine).next())
     circle = gp_Circ(gp_Ax2(pnt, OCC.gp.gp_DZ()), strip_width)
     profile_edge = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeWire(OCC.BRepBuilderAPI.BRepBuilderAPI_MakeEdge(circle).Edge())
-    pipe = BRepOffsetAPI_MakePipeShell(spine.Wire())
+    pipe = BRepOffsetAPI_MakePipeShell(spine)
     if not pipe.IsDone():
         #print("waiting for pipe")
         time.sleep(0.05)
     pipe.Add(profile_edge.Shape(), False, True)
     pipe.SetTransitionMode(BRepBuilderAPI_RoundCorner)
     pipe.Build()
+    print("getStripBoundary 0020*********")
+    OCCUtils.Topology.dumpTopology(pipe.Shape())
     section = OCC.BRepAlgoAPI.BRepAlgoAPI_Section(pipe.Shape(), aShape)
     section.Build()
     if section.IsDone():
+        print("getStripBoundary 0030*********")
+        OCCUtils.Topology.dumpTopology(section.Shape())
         return section
 
 def sweep_face(aFace, initial_section, sweep_width):
@@ -200,7 +214,7 @@ def sweep_face(aFace, initial_section, sweep_width):
         #a section might have multiple edges, only move up
         valid_edges = []
         min_valid_z = -initial_z
-        for e in Topo(section.Shape()).edges():
+        for e in section_wires:
             edge_bbox = Bnd_Box()
             OCC.BRepBndLib.brepbndlib_Add(e, edge_bbox)
             edge_xmin, edge_ymin, edge_zmin, edge_xmax, edge_ymax, edge_zmax = edge_bbox.Get()
@@ -209,16 +223,14 @@ def sweep_face(aFace, initial_section, sweep_width):
                 if edge_zmin<min_valid_z or min_valid_z==-initial_z:
                     min_valid_z = edge_zmin
         if valid_edges:
-            occ_seq = TopTools_ListOfShape()
-            for e in valid_edges:
-                #if an edge does not share a vertex with any existing edge in the wire, Add won't work
-                occ_seq.Append(e)
-            wire_make = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeWire()
-            wire_make.Add(occ_seq)
-            sweep_wires.append(wire_make)
-            section2 = getStripBoundary(front_face, wire_make, sweep_width)
+            assert len(valid_edges)==1
+            sweep_wires.append(valid_edges[0])
+            print("sweep_face: 0033")
+            OCCUtils.Topology.dumpTopology(valid_edges[0])
+            section2 = getStripBoundary(front_face, valid_edges[0], sweep_width)
             if section2:
-                #OCCUtils.Topology.dumpTopology(section2.Shape())
+                print("sweep_face: 0043")
+                OCCUtils.Topology.dumpTopology(section2.Shape())
                 section=section2
                 last_z = min_valid_z
             else:
@@ -244,7 +256,7 @@ sweep_wires = sweep_face(front_face, long_slice, 50)
 #display.DisplayShape(front_face)
 print(len(sweep_wires))
 for l in sweep_wires:
-    display.DisplayShape(l.Shape())
+    display.DisplayShape(l)
 
 display.FitAll()
 start_display()
