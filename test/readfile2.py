@@ -1,11 +1,11 @@
 from OCC.Display.SimpleGui import init_display
-from OCC.TopoDS import TopoDS_Shape
+from OCC.TopoDS import (TopoDS_Shape, topods_Vertex)
 from OCC.StlAPI import StlAPI_Reader
 
 from OCC.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
 from OCC.BRepBuilderAPI import BRepBuilderAPI_MakeFace, BRepBuilderAPI_Transform, BRepBuilderAPI_RoundCorner
 from OCC.BRepPrimAPI import BRepPrimAPI_MakeBox, BRepPrimAPI_MakeWedge, BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeTorus
-from OCC.gp import gp_Vec, gp_Ax2, gp_Pnt, gp_Dir, gp_Pln, gp_Trsf, gp_Circ
+from OCC.gp import gp_Vec, gp_Ax2, gp_Pnt, gp_Dir, gp_Pln, gp_Trsf, gp_Circ, gp
 from OCC.BRep import BRep_Tool
 
 from OCCUtils import Topo, Common, edge
@@ -17,8 +17,12 @@ from OCC.BRepOffsetAPI import BRepOffsetAPI_MakePipe, BRepOffsetAPI_MakePipeShel
 from OCC.BRepExtrema import BRepExtrema_DistShapeShape
 from OCC.TopTools import TopTools_ListOfShape
 from pprint import pprint
+from OCC.BRepGProp import BRepGProp_Face
+from OCC.TopAbs import (TopAbs_VERTEX, TopAbs_EDGE, TopAbs_FACE, TopAbs_WIRE,
+                        TopAbs_SHELL, TopAbs_SOLID, TopAbs_COMPOUND,
+                        TopAbs_COMPSOLID)
 
-display, start_display, add_menu, add_function_to_menu = init_display()
+import yaml
 
 def slicer(shape, deltaZ):
     # Param
@@ -41,7 +45,7 @@ def slicer(shape, deltaZ):
         if section.IsDone():
             sections.append(section)
     total_time = time.time() - init_time
-    print("%.3fs necessary to perform slice." % total_time)
+#    print("%.3fs necessary to perform slice." % total_time)
     return sections
 
 def get_connected_face_hash(whole_shape, part_shape, hash_faces):
@@ -78,6 +82,16 @@ def get_connected_edge_hash(whole_shape, part_shape, hash_edges):
     for k, v in new_edges.items():
         get_connected_edge_hash(whole_shape, v, hash_edges)
 
+def get_nearest(shape1, shape2):
+    distance = BRepExtrema_DistShapeShape()
+    distance.LoadS1(shape1)
+    distance.LoadS2(shape2)
+    distance.Perform()
+    while not distance.IsDone():
+        print("waiting for get_nearest")
+        time.sleep(0.01)
+    return distance
+
 def get_front_surface(stl_file, p1, p2):
     stl_reader = StlAPI_Reader()
     stl_box = TopoDS_Shape()
@@ -99,9 +113,9 @@ def get_front_surface(stl_file, p1, p2):
     for face in topo.faces():
         distance.LoadS2(face)
         distance.Perform()
-        if not distance.IsDone():
+        while not distance.IsDone():
             print("waiting for distance")
-            time.sleep(1)
+            time.sleep(0.01)
         d = distance.Value()
         if d<min_distance:
             min_distance = d
@@ -115,8 +129,8 @@ def get_front_surface(stl_file, p1, p2):
     return CommonSurface
 
 def get_wires_from_section(section):
-    print("get_wires_from_section 001")
-    OCCUtils.Topology.dumpTopology(section.Shape())
+#    print("get_wires_from_section 001")
+#    OCCUtils.Topology.dumpTopology(section.Shape())
     #result of an intersection between two shapes can be multiple discontinued wires, find each of them and return a list of wires
     topo_s = Topo(section.Shape())
     wires = []
@@ -146,8 +160,8 @@ def get_wires_from_section(section):
         occ_wires.append(wire_make.Wire())
     for w in occ_wires:
         e_l = get_edges_length(w)
-        print("wire length %.3fs " % e_l)
-        OCCUtils.Topology.dumpTopology(w)
+#        print("wire length %.3fs " % e_l)
+#        OCCUtils.Topology.dumpTopology(w)
 
     return occ_wires
     #time.sleep(10)
@@ -181,28 +195,29 @@ def get_lowest_long_slice(aShape, zDelta):
     return max_slice
 
 def getStripBoundary(aShape, spine, strip_width):
-    print("getStripBoundary 0000*********")
-    OCCUtils.Topology.dumpTopology(spine)
-    print(spine)
+#    print("getStripBoundary 0000*********")
+#    OCCUtils.Topology.dumpTopology(spine)
     brt = OCC.BRep.BRep_Tool()
     pnt = brt.Pnt(Topo(spine).ordered_vertices_from_wire(spine).next())
     circle = gp_Circ(gp_Ax2(pnt, OCC.gp.gp_DZ()), strip_width)
     profile_edge = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeWire(OCC.BRepBuilderAPI.BRepBuilderAPI_MakeEdge(circle).Edge())
     pipe = BRepOffsetAPI_MakePipeShell(spine)
-    if not pipe.IsDone():
-        #print("waiting for pipe")
-        time.sleep(0.05)
     pipe.Add(profile_edge.Shape(), False, True)
     pipe.SetTransitionMode(BRepBuilderAPI_RoundCorner)
     pipe.Build()
-    print("getStripBoundary 0020*********")
-    OCCUtils.Topology.dumpTopology(pipe.Shape())
+    while not pipe.IsDone():
+        print("waiting for pipe")
+        time.sleep(0.01)
+#    print("getStripBoundary 0020*********")
+#    OCCUtils.Topology.dumpTopology(pipe.Shape())
     section = OCC.BRepAlgoAPI.BRepAlgoAPI_Section(pipe.Shape(), aShape)
     section.Build()
-    if section.IsDone():
-        print("getStripBoundary 0030*********")
-        OCCUtils.Topology.dumpTopology(section.Shape())
-        return section
+    while not section.IsDone():
+        print("waiting for section")
+        time.sleep(0.01)
+#        print("getStripBoundary 0030*********")
+#        OCCUtils.Topology.dumpTopology(section.Shape())
+    return section
 
 def sweep_face(aFace, initial_section, sweep_width):
     sweep_wires = []
@@ -211,53 +226,129 @@ def sweep_face(aFace, initial_section, sweep_width):
     last_z = -initial_z
     while section:
         section_wires = get_wires_from_section(section)
-        #a section might have multiple edges, only move up
-        valid_edges = []
-        min_valid_z = -initial_z
-        for e in section_wires:
-            edge_bbox = Bnd_Box()
-            OCC.BRepBndLib.brepbndlib_Add(e, edge_bbox)
-            edge_xmin, edge_ymin, edge_zmin, edge_xmax, edge_ymax, edge_zmax = edge_bbox.Get()
-            if edge_zmin > last_z+0.01:
-                valid_edges.append(e)
-                if edge_zmin<min_valid_z or min_valid_z==-initial_z:
-                    min_valid_z = edge_zmin
-        if valid_edges:
-            assert len(valid_edges)==1
-            sweep_wires.append(valid_edges[0])
-            print("sweep_face: 0033")
-            OCCUtils.Topology.dumpTopology(valid_edges[0])
-            section2 = getStripBoundary(front_face, valid_edges[0], sweep_width)
-            if section2:
-                print("sweep_face: 0043")
-                OCCUtils.Topology.dumpTopology(section2.Shape())
-                section=section2
-                last_z = min_valid_z
-            else:
-                section=None
-        else:
-            section=None
+        #a section might have 1 or 2 wires, only move up
+        section = None
+        for w in section_wires:
+            wire_bbox = Bnd_Box()
+            OCC.BRepBndLib.brepbndlib_Add(w, wire_bbox)
+            xmin, ymin, zmin, xmax, ymax, zmax = wire_bbox.Get()
+            if zmin > last_z+0.01:
+                last_z = zmin
+                sweep_wires.append(w)
+#               print("sweep_face: 0033")
+#               OCCUtils.Topology.dumpTopology(valid_edges[0])
+                section2 = getStripBoundary(front_face, w, sweep_width)
+                if section2:
+#                    print("sweep_face: 0043")
+#                    OCCUtils.Topology.dumpTopology(section2.Shape())
+                     section=section2
     return sweep_wires
 
-#my_box = BRepPrimAPI_MakeBox(10., 20., 30.).Shape()
+def get_face_normal(face):
+#    print("get_face_normal 0010")
+#    OCCUtils.Topology.dumpTopology(face)
+    bf = BRepGProp_Face(face)
+    bounds = bf.Bounds()
+    vec = gp_Vec()
+    zDir = gp().DZ()
+    pt = gp_Pnt()
+    #get a normal vector to the face
+    bf.Normal(bounds[0],bounds[1],pt,vec)
+    return gp_Dir(vec)
 
-#'./models/box.stl'
-#view is along the X axis
-stl_reader = StlAPI_Reader()
-stl_box = TopoDS_Shape()
-stl_reader.Read(stl_box, './models/cylindar.stl')
+def get_vertex_normal(vertex, shape):
+    #a vertex belongs to multiple faces on the shape
+    #can only choose one face when calculating vertex normal
+    #preference tells which face is preferred (preferred direction, x+,y-,z+)
+    distance = get_nearest(vertex, shape)
+    #always use the first solution
+#    print("get_vertex_normal 0010")
+#    print(distance.Value())
+#    print(distance.NbSolution())
+    #SupportOnShape1, 2 is 1 based, not 0 based
+    nearest_shape = distance.SupportOnShape2(1)
+    topo_nearest_shape = Topo(nearest_shape)
+    topo_shape = Topo(shape)
+    face = None
+#    print("get_vertex_normal 0020")
+#    OCCUtils.Topology.dumpTopology(nearest_shape)
+#    print(TopAbs_VERTEX)
+#    print(nearest_shape.ShapeType())
+    if nearest_shape.ShapeType()==TopAbs_VERTEX:
+        face=topo_shape.faces_from_vertex(nearest_shape).next()
+    if nearest_shape.ShapeType()==TopAbs_EDGE:
+        face=topo_shape.faces_from_edge(nearest_shape).next()
+    if nearest_shape.ShapeType()==TopAbs_WIRE:
+        face=topo_shape.faces_from_wire(nearest_shape).next()
+    if nearest_shape.ShapeType()==TopAbs_FACE:
+        wire=topo_shape.wires_from_face(nearest_shape).next()
+        face=topo_shape.faces_from_wire(wire).next()
+    assert face, "unhandled nearest_shape type"
+    n = get_face_normal(face)
+    return n
 
+def format_wire_for_roboDK(wire, is_reverse=False):
+    vertices = []
+    vertex_hash = {}
+    wire_topo=Topo(wire)
+    brt = BRep_Tool()
+    for v in wire_topo.ordered_vertices_from_wire(wire):
+        #the last vertex will be missing from ordered_vertices_from_wire
+        vertices.append(v)
+        vertex_hash[v.__hash__()]=1
+    for v in wire_topo.vertices():
+        #add the missing vertex
+        if v.__hash__() not in vertex_hash:
+            vertices.append(v)
+            vertex_hash[v.__hash__()]=1
+    wire=[]
+    for i in range(len(vertices)):
+        index = i
+        if is_reverse:
+            index = len(vertices)-1-i
+        v=vertices[index]
+        pnt = brt.Pnt(topods_Vertex(v))
+        normal = get_vertex_normal(v, front_face)
+        wire.append({"location": [pnt.X(), pnt.Y(), pnt.Z()], "direction": [normal.X(), normal.Y(), normal.Z()]})
+    return wire
 
+#reduce number of vertices on a wire, to smoothen robotic arm's movement
+def reduce_wire_edge(wire, max_variance):
+    #a vertex can be removed if it's sufficiently close to the line between the two vertices on its side
+    #start from one end, them move to the other end
+    print("reduce_wire_edge TBD")
+    return wire
+
+display, start_display, add_menu, add_function_to_menu = init_display()
+
+max_vertex_variance = 0.1
 front_face = get_front_surface('./models/cylindar.stl', gp_Pnt(100.0, 0.0, -500), gp_Pnt(1100.0, 4000.0, 500.0))
 long_slice = get_lowest_long_slice(front_face, 20)
-OCCUtils.Topology.dumpTopology(long_slice.Shape())
-sweep_wires = sweep_face(front_face, long_slice, 50)
+#OCCUtils.Topology.dumpTopology(long_slice.Shape())
+sweep_wires = sweep_face(front_face, long_slice, 15)
 
+wires_roboDK = {'wires': []}
 #display.DisplayShape(front_face)
-print(len(sweep_wires))
-for l in sweep_wires:
-    display.DisplayShape(l)
-
+for idx, w in enumerate(sweep_wires):
+    #smoothen wire, remove unneeded edges from wire
+    #reverse direction for odd numbered wires
+    wire_reduced = reduce_wire_edge(w, max_vertex_variance)
+    wire_roboDK = format_wire_for_roboDK(wire_reduced, (idx % 2)==0)
+    wires_roboDK['wires'].append(wire_roboDK)
+    display.DisplayShape(wire_reduced)
 display.FitAll()
 start_display()
+
+outstream = open('./curves/cylindar.yml', 'w')
+yaml.dump(wires_roboDK, outstream, default_flow_style=False)
+outstream.close()
+
+with open('./curves/cylindar.csv', 'w') as csv_outstream:
+    for w in wires_roboDK['wires']:
+        for v in w:
+            location = v['location']
+            direction = v['direction']
+            csv_outstream.write("%f, %f, %f, %f, %f, %f\n" % (location[0], location[1], location[2], direction[0], direction[1], direction[2]))
+
+
 
