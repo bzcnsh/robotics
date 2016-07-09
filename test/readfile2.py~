@@ -309,7 +309,8 @@ def format_wire_for_roboDK(wire, is_reverse=False):
         v=vertices[index]
         pnt = brt.Pnt(topods_Vertex(v))
         normal = get_vertex_normal(v, front_face)
-        wire.append({"location": [pnt.X(), pnt.Y(), pnt.Z()], "direction": [normal.X(), normal.Y(), normal.Z()]})
+        #direction for tool is towards surface, which is reverse of the surface's normal
+        wire.append({"location": [pnt.X(), pnt.Y(), pnt.Z()], "direction": [-normal.X(), -normal.Y(), -normal.Z()]})
     return wire
 
 #reduce number of vertices on a wire, to smoothen robotic arm's movement
@@ -348,7 +349,7 @@ with open('./curves/cylindar.csv', 'w') as csv_outstream:
         for v in w:
             location = v['location']
             direction = v['direction']
-            csv_outstream.write("%f, %f, %f, %f, %f, %f\\n" % (location[0], location[1], location[2], direction[0], direction[1], direction[2]))
+            csv_outstream.write("%f, %f, %f, %f, %f, %f\n" % (location[0], location[1], location[2], direction[0], direction[1], direction[2]))
 
 
 

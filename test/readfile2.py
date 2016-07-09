@@ -309,7 +309,8 @@ def format_wire_for_roboDK(wire, is_reverse=False):
         v=vertices[index]
         pnt = brt.Pnt(topods_Vertex(v))
         normal = get_vertex_normal(v, front_face)
-        wire.append({"location": [pnt.X(), pnt.Y(), pnt.Z()], "direction": [normal.X(), normal.Y(), normal.Z()]})
+        #direction for tool is towards face, which is reverse of the face's normal
+        wire.append({"location": [pnt.X(), pnt.Y(), pnt.Z()], "direction": [-normal.X(), -normal.Y(), -normal.Z()]})
     return wire
 
 #reduce number of vertices on a wire, to smoothen robotic arm's movement
