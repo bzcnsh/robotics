@@ -354,10 +354,11 @@ def reduce_wire_edge(wire, max_variance):
 display, start_display, add_menu, add_function_to_menu = init_display()
 
 max_vertex_variance = 0.01
+sweep_width=50
 front_face = get_front_surface('./models/cylindar.stl', gp_Pnt(100.0, 0.0, -500), gp_Pnt(1100.0, 4000.0, 500.0))
 long_slice = get_lowest_long_slice(front_face, 20)
 #OCCUtils.Topology.dumpTopology(long_slice.Shape())
-sweep_wires = sweep_face(front_face, long_slice, 15)
+sweep_wires = sweep_face(front_face, long_slice, sweep_width)
 
 wires_roboDK = {'wires': []}
 #display.DisplayShape(front_face)
