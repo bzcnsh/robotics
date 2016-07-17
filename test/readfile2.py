@@ -158,6 +158,9 @@ def get_front_surface(stl_file, p1, p2):
     return CommonSurface
 
 def get_wires_from_section(section):
+    #small gap between edges
+    #self intersecting edges
+    #see issue #8
     show_log("get_wires_from_section 001")
     OCCUtils.Topology.dumpTopology(section.Shape())
     #result of an intersection between two shapes can be multiple discontinued wires, find each of them and return a list of wires
@@ -187,12 +190,30 @@ def get_wires_from_section(section):
             continue
         OCCUtils.Topology.dumpTopology(e)
         assert edge_belong_to_wire, "an edge not assigned to a wire"
+    show_log("get_wires_from_section 0020")
+    pprint(wires)
     occ_wires = []
+    direction=sweep_orientation
+    brt = BRep_Tool()
     for w in wires:
+        #sort vertices from edges
+        vertex_hash = {}
+        for h, e in w.items():
+            e_topo=Topo(e)
+            for v in e_topo.vertices():
+                pnt = brt.Pnt(topods_Vertex(v))
+                if direction=="x":
+                    vertex_hash[pnt.X()]=v
+                if direction=="y":
+                    vertex_hash[pnt.Y()]=v
+                if direction=="z":
+                    vertex_hash[pnt.Z()]=v
+        sorted_vertices = sorted(vertex_hash.keys())
         occ_seq = TopTools_ListOfShape()
         wire_make = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeWire()
-        for h, e in w.items():
-            occ_seq.Append(e)
+        for i in range(0, len(sorted_vertices)-1):
+            new_edge = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeEdge(vertex_hash[sorted_vertices[i]], vertex_hash[sorted_vertices[i+1]]).Edge()
+            occ_seq.Append(new_edge)
         wire_make.Add(occ_seq)
         occ_wires.append(wire_make.Wire())
     for w in occ_wires:
@@ -204,7 +225,7 @@ def get_wires_from_section(section):
     return occ_wires
 
 def merge_nearby_edges(wires, tolerence):
-    if len(wires)<=2:
+    if len(wires)<=1:
         return wires
     merged = True
     show_log("merge_nearby_edge 0000")
@@ -521,7 +542,7 @@ max_vertex_variance = 1
 sweep_orientation = "y"
 sweep_width=50
 object_name='cylindar-sphere-top-from-rhino'
-front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-4000.0, -300.0, 0.0), gp_Pnt(4000.0, 500.0, 800.0))
+front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-4000.0, -500.0, -400.0), gp_Pnt(4000.0, 300.0, 400.0))
 #front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-400.0, -4000.0, 100), gp_Pnt(800.0, 4000.0, 500.0))
 long_slice = get_lowest_long_slice(front_face, 20)
 #OCCUtils.Topology.dumpTopology(long_slice.Shape())
