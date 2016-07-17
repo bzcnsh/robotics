@@ -88,8 +88,8 @@ def get_connected_edge_hash(whole_shape, part_shape, hash_edges):
             if not e.__hash__() in hash_edges:
                 hash_edges[e.__hash__()] = 1
                 new_edges[e.__hash__()]=e
-    for k, v in new_edges.items():
-        get_connected_edge_hash(whole_shape, v, hash_edges)
+    for h, e in new_edges.items():
+        get_connected_edge_hash(whole_shape, e, hash_edges)
 
 def get_nearest(shape1, shape2):
     distance = BRepExtrema_DistShapeShape()
@@ -172,13 +172,21 @@ def get_wires_from_section(section):
         if not found_edge_in_wire:
             new_wire = {}
             get_connected_edge_hash(section.Shape(), e, new_wire)
+            #pprint(new_wire)
             wires.append(new_wire)
 
     for e in topo_s.edges():
+        edge_belong_to_wire = False
         e_hash = e.__hash__()
         for w in wires:
             if e_hash in w:
                 w[e_hash] = e
+                edge_belong_to_wire = True
+                break
+        if edge_belong_to_wire:
+            continue
+        OCCUtils.Topology.dumpTopology(e)
+        assert edge_belong_to_wire, "an edge not assigned to a wire"
     occ_wires = []
     for w in wires:
         occ_seq = TopTools_ListOfShape()
@@ -192,9 +200,50 @@ def get_wires_from_section(section):
         show_log("wire length %.3fs " % e_l)
         OCCUtils.Topology.dumpTopology(w)
 
+    occ_wires = merge_nearby_edges(occ_wires, 0.2)
     return occ_wires
-    #time.sleep(10)
 
+def merge_nearby_edges(wires, tolerence):
+    if len(wires)<=2:
+        return wires
+    merged = True
+    show_log("merge_nearby_edge 0000")
+    while merged:
+        merged=False
+        for i in wires:
+            show_log("merge_nearby_edge 0010")
+            i_topo = Topo(i)
+            for j in wires:
+                show_log("merge_nearby_edge 0015")
+                if i!=j:
+                    j_topo = Topo(j)
+                    for v_i in i_topo.vertices():
+                        for v_j in j_topo.vertices():
+                            distance = get_nearest(v_i, v_j)
+                            if distance.Value()<tolerence:
+                                #merge wires if they are nearby
+                                new_edge = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeEdge(v_i, v_j).Edge()
+                                occ_seq = TopTools_ListOfShape()
+                                occ_seq.Append(new_edge)
+                                wire_make = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeWire()
+                                for e in i_topo.edges():
+                                    occ_seq.Append(e)
+                                for e in j_topo.edges():
+                                    occ_seq.Append(e)
+                                wire_make.Add(occ_seq)
+                                wires.append(wire_make.Wire())
+                                wires.remove(i)
+                                wires.remove(j)
+                                show_log("merge_nearby_edge 0030 merged")
+                                merged=True
+                                break
+                    if merged:
+                        break
+                if merged:
+                    break
+            if merged:
+                break
+    return wires
 
 #create sections along Z axis
 #find the longest intersection line
@@ -253,6 +302,7 @@ def getStripBoundary(aShape, spine, strip_width):
     ais_pipe = display.DisplayShape(pipe.Shape())
     display.Context.SetTransparency(ais_pipe, 0.5)
     section = OCC.BRepAlgoAPI.BRepAlgoAPI_Section(pipe.Shape(), aShape)
+    #section.Approximation(False)
     section.Build()
     while not section.IsDone():
         show_log("waiting for section")
