@@ -197,6 +197,7 @@ def get_wires_from_section(section):
     brt = BRep_Tool()
     for w in wires:
         #sort vertices from edges
+        #reconstructed edges from sorted vertices
         vertex_hash = {}
         for h, e in w.items():
             e_topo=Topo(e)
@@ -225,6 +226,7 @@ def get_wires_from_section(section):
     return occ_wires
 
 def merge_nearby_edges(wires, tolerence):
+    show_log("merge_nearby_edges 0000: %i" % (len(wires)))
     if len(wires)<=1:
         return wires
     merged = True
@@ -236,28 +238,37 @@ def merge_nearby_edges(wires, tolerence):
             i_topo = Topo(i)
             for j in wires:
                 show_log("merge_nearby_edge 0015")
-                if i!=j:
-                    j_topo = Topo(j)
-                    for v_i in i_topo.vertices():
-                        for v_j in j_topo.vertices():
-                            distance = get_nearest(v_i, v_j)
-                            if distance.Value()<tolerence:
+                if i==j:
+                    continue
+                j_topo = Topo(j)
+                for v_i in i_topo.vertices():
+                    for v_j in j_topo.vertices():
+                        distance = get_nearest(v_i, v_j)
+                        if distance.Value()<tolerence:
+                            occ_seq = TopTools_ListOfShape()
+                            if v_i.__hash__() != v_j.__hash__():
                                 #merge wires if they are nearby
-                                new_edge = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeEdge(v_i, v_j).Edge()
-                                occ_seq = TopTools_ListOfShape()
-                                occ_seq.Append(new_edge)
-                                wire_make = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeWire()
-                                for e in i_topo.edges():
-                                    occ_seq.Append(e)
-                                for e in j_topo.edges():
-                                    occ_seq.Append(e)
-                                wire_make.Add(occ_seq)
-                                wires.append(wire_make.Wire())
+                                new_edge = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeEdge(v_i, v_j)
+                                while not new_edge.IsDone():
+                                    show_log("waiting for BRepBuilderAPI_MakeEdge")
+                                    OCCUtils.Topology.dumpTopology(v_i)
+                                    OCCUtils.Topology.dumpTopology(v_j)
+                                    time.sleep(0.01)
+                                occ_seq.Append(new_edge.Edge())
+                            for e in i_topo.edges():
+                                occ_seq.Append(e)
+                            for e in j_topo.edges():
+                                occ_seq.Append(e)
+                            wire_make = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeWire()
+                            wire_make.Add(occ_seq)
+                            if i in wires:
                                 wires.remove(i)
+                            if j in wires:
                                 wires.remove(j)
-                                show_log("merge_nearby_edge 0030 merged")
-                                merged=True
-                                break
+                            wires.append(wire_make.Wire())
+                            show_log("merge_nearby_edge 0030 merged")
+                            merged=True
+                            break
                     if merged:
                         break
                 if merged:
@@ -373,7 +384,7 @@ def sweep_face(aFace, initial_section, sweep_width, max_variance, up_or_down):
     return sweep_wires
 
 def get_face_normal(face):
-    show_log("get_face_normal 0010")
+    #show_log("get_face_normal 0010")
 #    OCCUtils.Topology.dumpTopology(face)
     bf = BRepGProp_Face(face)
     bounds = bf.Bounds()
@@ -540,7 +551,7 @@ display, start_display, add_menu, add_function_to_menu = init_display()
 
 max_vertex_variance = 1
 sweep_orientation = "y"
-sweep_width=50
+sweep_width=30
 object_name='cylindar-sphere-top-from-rhino'
 front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-4000.0, -600.0, -400.0), gp_Pnt(4000.0, 200.0, 400.0))
 #front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-400.0, -4000.0, 100), gp_Pnt(800.0, 4000.0, 500.0))
