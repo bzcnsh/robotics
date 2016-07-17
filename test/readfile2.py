@@ -339,7 +339,7 @@ def sweep_face(aFace, initial_section, sweep_width, max_variance, up_or_down):
     zmax_last = 0
     while section:
         section_wires = get_wires_from_section(section)
-        assert len(section_wires)>=1 and len(section_wires)<=2, "invalid section_wires count, should be 1 or 2"
+        #assert len(section_wires)>=1 and len(section_wires)<=2, "invalid section_wires count, should be 1 or 2"
         #this is the initial_section
         wire = None
         if not sweep_wires and len(section_wires)==1:
@@ -542,7 +542,7 @@ max_vertex_variance = 1
 sweep_orientation = "y"
 sweep_width=50
 object_name='cylindar-sphere-top-from-rhino'
-front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-4000.0, -500.0, -400.0), gp_Pnt(4000.0, 300.0, 400.0))
+front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-4000.0, -600.0, -400.0), gp_Pnt(4000.0, 200.0, 400.0))
 #front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-400.0, -4000.0, 100), gp_Pnt(800.0, 4000.0, 500.0))
 long_slice = get_lowest_long_slice(front_face, 20)
 #OCCUtils.Topology.dumpTopology(long_slice.Shape())
