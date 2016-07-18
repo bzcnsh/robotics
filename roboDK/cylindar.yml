@@ -1,0 +1,5 @@
+wire_setting:
+   ready_offset: -50
+   work_offset: -5
+   end_offset: -20
+   job_end_offset: -100
