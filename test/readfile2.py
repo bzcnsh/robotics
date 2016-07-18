@@ -564,7 +564,7 @@ display, start_display, add_menu, add_function_to_menu = init_display()
 
 max_vertex_variance = 1
 sweep_orientation = "y"
-sweep_width=100
+sweep_width=30
 object_name='cylindar-sphere-top-from-rhino'
 front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-4000.0, -400.0, -400.0), gp_Pnt(4000.0, 400.0, 400.0))
 #front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-400.0, -4000.0, 100), gp_Pnt(800.0, 4000.0, 500.0))
