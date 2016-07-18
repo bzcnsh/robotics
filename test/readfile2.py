@@ -566,7 +566,7 @@ max_vertex_variance = 1
 sweep_orientation = "y"
 sweep_width=100
 object_name='cylindar-sphere-top-from-rhino'
-front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-4000.0, -500.0, -500.0), gp_Pnt(4000.0, 500.0, 500.0))
+front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-4000.0, -400.0, -400.0), gp_Pnt(4000.0, 400.0, 400.0))
 #front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-400.0, -4000.0, 100), gp_Pnt(800.0, 4000.0, 500.0))
 long_slice = get_lowest_long_slice(front_face, 20)
 #OCCUtils.Topology.dumpTopology(long_slice.Shape())
