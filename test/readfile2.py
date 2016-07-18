@@ -28,6 +28,7 @@ import yaml
 import datetime
 import pickle
 import numpy
+import scipy.linalg
 
 def show_log(message):
     print("%s: %s" % (datetime.datetime.now(), message))
@@ -453,15 +454,27 @@ def format_wire_for_roboDK(wire, is_reverse=False):
     vertices = get_ordered_vertices_from_wire(wire)
     brt = BRep_Tool()
     wire=[]
+    last_path_direction = None
     for i in range(len(vertices)):
         index = i
+        next_index = index + 1
         if is_reverse:
             index = len(vertices)-1-i
+            next_index = index - 1
         v=vertices[index]
         pnt = brt.Pnt(topods_Vertex(v))
         normal = get_vertex_normal(v, front_face)
+        if not ((index==0 and is_reverse) or (index==len(vertices)-1 and not is_reverse)):
+            pnt_next = brt.Pnt(topods_Vertex(vertices[next_index]))
+            mat_pnt = numpy.mat([pnt.X(), pnt.Y(), pnt.Z()])
+            mat_pnt_next = numpy.mat([pnt_next.X(), pnt_next.Y(), pnt_next.Z()])
+            path_direction = mat_pnt_next-mat_pnt
+            path_direction = path_direction/scipy.linalg.norm(path_direction)
+            last_path_direction = path_direction
+        else:
+            path_direction = last_path_direction
         #direction for tool is towards face, which is reverse of the face's normal
-        wire.append({"location": [pnt.X(), pnt.Y(), pnt.Z()], "direction": [-normal.X(), -normal.Y(), -normal.Z()]})
+        wire.append({"location": [pnt.X(), pnt.Y(), pnt.Z()], "direction": [-normal.X(), -normal.Y(), -normal.Z()], "path_direction": [path_direction.item(0),path_direction.item(1),path_direction.item(2)]})
     return wire
     
 #reduce number of vertices on a wire, to smoothen robotic arm's movement
@@ -551,9 +564,9 @@ display, start_display, add_menu, add_function_to_menu = init_display()
 
 max_vertex_variance = 1
 sweep_orientation = "y"
-sweep_width=30
+sweep_width=100
 object_name='cylindar-sphere-top-from-rhino'
-front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-4000.0, -600.0, -400.0), gp_Pnt(4000.0, 200.0, 400.0))
+front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-4000.0, -500.0, -500.0), gp_Pnt(4000.0, 500.0, 500.0))
 #front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(-400.0, -4000.0, 100), gp_Pnt(800.0, 4000.0, 500.0))
 long_slice = get_lowest_long_slice(front_face, 20)
 #OCCUtils.Topology.dumpTopology(long_slice.Shape())
