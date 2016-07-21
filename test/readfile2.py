@@ -10,7 +10,6 @@ from OCC.BRep import BRep_Tool
 
 from OCCUtils import Topo, Common, edge
 from OCCUtils.Topology import WireExplorer
-from OCC.Bnd import Bnd_Box
 import OCC
 import OCCUtils
 import time
@@ -39,28 +38,41 @@ def show_log(function, message):
     if function in logging_functions:
         print("%s  %s: %s" % (function, datetime.datetime.now(), message))
 
-def slicer(shape, deltaZ):
+def slicer(shape, delta, direction):
     # Param
-    bbox = Bnd_Box()
-    OCC.BRepBndLib.brepbndlib_Add(shape, bbox)
-    xmin, ymin, Zmin, xmax, ymax, Zmax = bbox.Get()
-    D = gp_Dir(0., 0., 1.)  # the z direction
+    xmin, ymin, zmin, xmax, ymax, zmax = sweeper.get_shape_boundary([shape])
+    if direction=="x":
+        D = gp_Dir(1., 0., 0.)  # the x direction
+    if direction=="y":
+        D = gp_Dir(0., 1., 0.)  # the y direction
+    if direction=="z":
+        D = gp_Dir(0., 0., 1.)  # the z direction
     # Perform slice
     sections = []
     init_time = time.time()  # for total time computation
-    iMax = int((Zmax-Zmin)/deltaZ)
+    if direction=="x":
+        iMax = int((xmax-xmin)/delta)
+    if direction=="y":
+        iMax = int((ymax-ymin)/delta)
+    if direction=="z":
+        iMax = int((zmax-zmin)/delta)
     for i in range(iMax):
         # Create Plane defined by a point and the perpendicular direction
-        z = Zmin+i*deltaZ
-        P = gp_Pnt(0, 0, z)
-        Pln = gp_Pln(P, D)
+        if direction=="x":
+            x = xmin+i*delta
+            Pln = gp_Pln(gp_Pnt(x, 0, 0), D)
+        if direction=="y":
+            y = ymin+i*delta
+            Pln = gp_Pln(gp_Pnt(0, y, 0), D)
+        if direction=="z":
+            z = zmin+i*delta
+            Pln = gp_Pln(gp_Pnt(0, 0, z), D)
         face = BRepBuilderAPI_MakeFace(Pln).Shape()
         # Computes Shape/Plane intersection
         section = OCC.BRepAlgoAPI.BRepAlgoAPI_Section(shape, face)
         if section.IsDone():
             sections.append(section)
     total_time = time.time() - init_time
-#    show_log("slicer", "%.3fs necessary to perform slice." % total_time)
     return sections
 
 def get_front_surface(stl_file, p1, p2):
@@ -100,9 +112,9 @@ def get_edges_length(aShape):
         t_length += oe.length()
     return t_length
 
-def get_lowest_long_slice(aShape, zDelta):
+def get_longest_slice(aShape, delta, direction):
     #create sections along Z axis
-    slices = slicer(aShape, zDelta)
+    slices = slicer(aShape, delta, direction)
     max_slice_length=-1
     max_slice = None
     for s in slices:
@@ -185,26 +197,26 @@ logging_functions = ["get_wires_from_section", "merge_nearby_edges", "getStripBo
 
 object_name='full-cylindar-sphere-top-from-rhino'
 blocks = [
-          {'blockid': '01', 'sweep_orientation': 'x', 'view_port_bottom_left':[-4000.0,-1200.0,-400.0], 'view_port_top_right': [4000.0,-400.0,400.0]},
-          {'blockid': '02', 'sweep_orientation': 'x', 'view_port_bottom_left':[-4000.0,-1200.0,400.0], 'view_port_top_right': [4000.0,-400.0,1200.0]},
-          {'blockid': '03', 'sweep_orientation': 'y', 'view_port_bottom_left':[-4000.0,-400.0,-400.0], 'view_port_top_right': [0.0,400.0,400.0]},
-          {'blockid': '04', 'sweep_orientation': 'y', 'view_port_bottom_left':[-4000.0,-400.0,400.0], 'view_port_top_right': [0.0,400.0,1200.0]}
+          #{'blockid': '01', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-400.0], 'view_port_top_right': [4000.0,-400.0,400.0]},
+          #{'blockid': '02', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,400.0], 'view_port_top_right': [4000.0,-400.0,1200.0]},
+          {'blockid': '03', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-400.0,-400.0], 'view_port_top_right': [0.0,400.0,400.0]},
+          #{'blockid': '04', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-400.0,400.0], 'view_port_top_right': [0.0,400.0,1200.0]}
           ]
 for b in blocks:
     print("blockid: %s" % b['blockid'])
-    sweeper=ut.surface_sweeper({'sweep_width': 30.0, 'max_vertex_variance': 0.001,
-                            'max_sweep_line_variance': 1.0, 'sweep_orientation': b['sweep_orientation'], 'wire_join_max_distance': 45,
+    sweeper=ut.surface_sweeper({'sweep_width': 120.0, 'max_vertex_variance': 0.001,
+                            'max_sweep_line_variance': 1.0, 'sweep_direction': b['sweep_direction'], 'wire_join_max_distance': 45,
                             'path_extension_distance': 10.0})
     vp_bf=b['view_port_bottom_left']
     vp_tr=b['view_port_top_right']
     front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(vp_bf[0], vp_bf[1], vp_bf[2]), gp_Pnt(vp_tr[0], vp_tr[1], vp_tr[2]))
-    long_slice = get_lowest_long_slice(front_face, 20)
+    long_slice = get_longest_slice(front_face, 20, 'z')
     sweep_wires_upside = sweeper.sweep_face(front_face, long_slice, 'up')
     sweep_wires_downside = sweeper.sweep_face(front_face, long_slice, 'down')
     del sweep_wires_downside[0]
     sweep_wires = sweep_wires_upside + sweep_wires_downside
-
-    wires_roboDK = {'wires': []}
+    xmin, ymin, Zmin, xmax, ymax, Zmax = sweeper.get_shape_boundary(sweep_wires)
+    wires_roboDK = {'wires': [], 'boundary': [[xmin, ymin, Zmin], [xmax, ymax, Zmax]]}
     ais_front = display.DisplayShape(front_face)
     display.Context.SetTransparency(ais_front, 0.8)
 
@@ -214,6 +226,7 @@ for b in blocks:
         #display.DisplayShape(w)
         wire_roboDK = format_wire_for_roboDK(w, (idx % 2)==0)
         wires_roboDK['wires'].append(wire_roboDK)
+        
         display.DisplayShape(w)
     
     outstream = open('./curves/'+object_name+b['blockid']+'.yml', 'w')

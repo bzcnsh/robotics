@@ -10,7 +10,7 @@ import OCCUtils.Topology
 
 class UtilitiesTestCase(unittest.TestCase):
     def setUp(self):
-        self.sweeper=ut.surface_sweeper({'sweep_width': 60, 'max_vertex_variance': 0.001, 'sweep_orientation': 'y', 'wire_join_max_distance': 10.0, 'max_sweep_line_variance': 0.5})
+        self.sweeper=ut.surface_sweeper({'sweep_width': 60, 'max_vertex_variance': 0.001, 'sweep_direction': 'y', 'wire_join_max_distance': 10.0, 'max_sweep_line_variance': 0.5})
     def tearDown(self):
         print("tear down")
     def test_make_vertex_from_point(self):
@@ -74,7 +74,7 @@ class UtilitiesTestCase(unittest.TestCase):
         assert not self.sweeper.is_equal_wire(wire1, wire3), "different vertices result in different wire"
 
     def test_get_ordered_vertices_from_wire(self):
-        setattr(self.sweeper, 'sweep_orientation', 'x')
+        setattr(self.sweeper, 'sweep_direction', 'x')
         p = [[16.0, 2.5, 3.25], [14.0, 0.0, 2.0], [12.0, 5.0, 2.0], [10.0, 5.0, 2.0], [8.0, 5.0, 2.0], [7.0, 5.0, 2.0]]
         v = map(self.sweeper.make_vertex_from_point, p)
         wire = self.sweeper.make_wire_from_point_list(p)
@@ -83,7 +83,7 @@ class UtilitiesTestCase(unittest.TestCase):
             assert self.sweeper.is_equal_vertex(vertices[i], v[len(v)-i-1]), "sorting by x will reverse p's order"
 
     def test_reduce_wire_edge(self):
-        setattr(self.sweeper, 'sweep_orientation', 'x')
+        setattr(self.sweeper, 'sweep_direction', 'x')
         p = [[0.0,  0.0,    0.0],
              [1.0,  1.0,    0.0],
              [2.0,  -2.0,    0.0],
@@ -190,7 +190,7 @@ class UtilitiesTestCase(unittest.TestCase):
              [27.0,  -1.0,    0.0],
              [28.0,  0.0,    0.0]]]
         setattr(self.sweeper, 'wire_join_max_distance', 0.5)
-        setattr(self.sweeper, 'sweep_orientation', 'x')
+        setattr(self.sweeper, 'sweep_direction', 'x')
         wires = map(self.sweeper.make_wire_from_point_list, p)
         make_result = map(self.sweeper.make_wire_from_point_list, r)
         run_result = self.sweeper.join_nearby_edges(wires)
@@ -314,7 +314,7 @@ class UtilitiesTestCase(unittest.TestCase):
                       [1.0, 1.0, 1.0],
                       [2.0, 1.0, 1.0],
                       [4.0, -1.0, -1.0]]
-        setattr(self.sweeper, 'sweep_orientation', 'x')
+        setattr(self.sweeper, 'sweep_direction', 'x')
         w = self.sweeper.make_wire_from_point_list(p)
         w_extended = self.sweeper.make_wire_from_point_list(p_extended)
         w_tested = self.sweeper.extend_wire(w, 1.732, "both")

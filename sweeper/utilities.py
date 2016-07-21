@@ -21,7 +21,8 @@ class surface_sweeper:
         if parameters.has_key('sweep_width'): self.sweep_width = parameters['sweep_width']
         if parameters.has_key('max_vertex_variance'): self.max_vertex_variance = parameters['max_vertex_variance']
         if parameters.has_key('max_sweep_line_variance'): self.max_sweep_line_variance = parameters['max_sweep_line_variance']
-        if parameters.has_key('sweep_orientation'): self.sweep_orientation = parameters['sweep_orientation']
+        if parameters.has_key('sweep_direction'): self.sweep_direction = parameters['sweep_direction']
+        if parameters.has_key('slice_direction'): self.slice_direction = parameters['slice_direction']
         if parameters.has_key('sweep_surface'): self.sweep_surface = parameters['sweep_surface']
         if parameters.has_key('wire_join_max_distance'): self.wire_join_max_distance = parameters['wire_join_max_distance']
         if parameters.has_key('path_extension_distance'): self.path_extension_distance = parameters['path_extension_distance']
@@ -88,11 +89,11 @@ class surface_sweeper:
         brt = OCC.BRep.BRep_Tool()
         for v in wire_topo.vertices():
             pnt = brt.Pnt(OCC.TopoDS.topods_Vertex(v))
-            if self.sweep_orientation=="x":
+            if self.sweep_direction=="x":
                 vertex_hash[pnt.X()]=v
-            if self.sweep_orientation=="y":
+            if self.sweep_direction=="y":
                 vertex_hash[pnt.Y()]=v
-            if self.sweep_orientation=="z":
+            if self.sweep_direction=="z":
                 vertex_hash[pnt.Z()]=v
         for k in sorted(vertex_hash.keys()):
             vertices.append(vertex_hash[k])
@@ -208,11 +209,11 @@ class surface_sweeper:
         #sort wires by its first vertex
         for i in ordered_vertices:
             x, y, z = self.get_point_from_vertex(i[0])
-            if self.sweep_orientation=="x":
+            if self.sweep_direction=="x":
                 wires_hash[x]=i
-            if self.sweep_orientation=="y":
+            if self.sweep_direction=="y":
                 wires_hash[y]=i
-            if self.sweep_orientation=="z":
+            if self.sweep_direction=="z":
                 wires_hash[z]=i
          
         for k in sorted(wires_hash.keys()):
@@ -401,9 +402,7 @@ class surface_sweeper:
             #a pipe intersects with surface above and below the pipe's spine line, the minimum distance between the two section lines sweep_width, or 2xpipe raidus
             #compare wire with previous section wire
             for w in section_wires:
-                wire_bbox1 = OCC.Bnd.Bnd_Box()
-                OCC.BRepBndLib.brepbndlib_Add(w, wire_bbox1)
-                xmin, ymin, zmin, xmax, ymax, zmax = wire_bbox1.Get()
+                xmin, ymin, zmin, xmax, ymax, zmax = self.get_shape_boundary([w])
                 #print("zmin: %f, zmax: %f" % (zmin, zmax))
                 if (up_or_down=='up' and zmin>zmin_last) or (up_or_down=='down' and zmax<zmax_last):
                     proper_side_section_wires.append(w)
@@ -412,11 +411,7 @@ class surface_sweeper:
             #print("proper side section_wire count 02: %i" % len(proper_side_section_wires))
             joined_section_wires = self.join_nearby_edges(proper_side_section_wires)
             #print("joined section_wire count 03: %i" % len(joined_section_wires))
-            wire_bbox2 = OCC.Bnd.Bnd_Box()
-            #set zmin_last, zmax_last
-            for w in joined_section_wires:
-                OCC.BRepBndLib.brepbndlib_Add(w, wire_bbox2)
-            xmin, ymin, zmin_last, xmax, ymax, zmax_last = wire_bbox2.Get()
+            xmin, ymin, zmin_last, xmax, ymax, zmax_last = self.get_shape_boundary(joined_section_wires)
             print("direction: %s, xmin: %f, ymin: %f, zmin_last: %f, xmax: %f, ymax: %f, zmax_last: %f" % (up_or_down, xmin, ymin, zmin_last, xmax, ymax, zmax_last))
         
             sections = []
@@ -428,3 +423,9 @@ class surface_sweeper:
                     sections.append(section)
             sweep_wires = sweep_wires + joined_section_wires
         return sweep_wires
+
+    def get_shape_boundary(self, shapes):
+        bbox = OCC.Bnd.Bnd_Box()
+        for s in shapes:
+            OCC.BRepBndLib.brepbndlib_Add(s, bbox)
+        return bbox.Get()
