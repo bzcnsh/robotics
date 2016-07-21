@@ -10,7 +10,8 @@ import OCCUtils.Topology
 
 class UtilitiesTestCase(unittest.TestCase):
     def setUp(self):
-        self.sweeper=ut.surface_sweeper({'sweep_width': 60, 'max_vertex_variance': 0.001, 'sweep_direction': 'y', 'wire_join_max_distance': 10.0, 'max_sweep_line_variance': 0.5})
+        self.sweeper=ut.surface_sweeper({'sweep_width': 60, 'max_vertex_variance': 0.001, 'sweep_direction': 'y',
+                                         'slice_direction': 'z', 'wire_join_max_distance': 10.0, 'max_sweep_line_variance': 0.5})
     def tearDown(self):
         print("tear down")
     def test_make_vertex_from_point(self):
@@ -321,12 +322,16 @@ class UtilitiesTestCase(unittest.TestCase):
         assert self.sweeper.is_equal_wire(w_extended, w_tested), "the two wires should match"
     
     def test_get_strip_boundary(self):
-        assert "False", "TBD get_strip_boundary"
+        assert False, "TBD get_strip_boundary"
 
     def test_sweep_face(self):
-        assert "False", "TBD sweep_face"
+        assert False, "TBD sweep_face"
+
+    def test_sweep_face(self):
+        assert False, "TBD get_slices"
             
 '''
+    def get_slices(self, shape, delta):
     def sweep_face(self, aFace, initial_section, up_or_down):
     get_strip_boundary(shape, spine):
     #def extend_wire(self, wire, length, direction="both"):

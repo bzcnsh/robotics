@@ -67,7 +67,7 @@ class surface_sweeper:
         for i in range(len(wire_keep)-1):
             t11 = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeEdge(vertices[wire_keep[i]], vertices[wire_keep[i+1]])
             while not t11.IsDone():
-                time.sleep(0.1)
+                time.sleep(0.01)
             new_edge = t11.Edge()
             occ_seq.Append(new_edge)
         new_wire.Add(occ_seq)
@@ -378,8 +378,8 @@ class surface_sweeper:
         #import pdb; pdb.set_trace()
         sweep_wires = []
         sections = [initial_section]
-        zmin_last=-99999999
-        zmax_last=99999999
+        min_last=-99999999
+        max_last=99999999
         #one sweep can have multiple segments, each segment has its own spine wire
         #a spine wire produces one or two intersection with the surface (above and below the spine)
         #the above and below sections are mixed in a "compound" shape, each section can have multiple wires, due to underlying software bug, wires belong to same section should be merged
@@ -404,15 +404,26 @@ class surface_sweeper:
             for w in section_wires:
                 xmin, ymin, zmin, xmax, ymax, zmax = self.get_shape_boundary([w])
                 #print("zmin: %f, zmax: %f" % (zmin, zmax))
-                if (up_or_down=='up' and zmin>zmin_last) or (up_or_down=='down' and zmax<zmax_last):
+                if ( (self.slice_direction=='x' and ((up_or_down=='up' and xmin>min_last) or (up_or_down=='down' and xmax<max_last))) or
+                     (self.slice_direction=='y' and ((up_or_down=='up' and ymin>min_last) or (up_or_down=='down' and ymax<max_last))) or
+                     (self.slice_direction=='z' and ((up_or_down=='up' and zmin>min_last) or (up_or_down=='down' and zmax<max_last))) ):
                     proper_side_section_wires.append(w)
             if not proper_side_section_wires:
                 break
             #print("proper side section_wire count 02: %i" % len(proper_side_section_wires))
             joined_section_wires = self.join_nearby_edges(proper_side_section_wires)
             #print("joined section_wire count 03: %i" % len(joined_section_wires))
-            xmin, ymin, zmin_last, xmax, ymax, zmax_last = self.get_shape_boundary(joined_section_wires)
-            print("direction: %s, xmin: %f, ymin: %f, zmin_last: %f, xmax: %f, ymax: %f, zmax_last: %f" % (up_or_down, xmin, ymin, zmin_last, xmax, ymax, zmax_last))
+            xmin, ymin, zmin, xmax, ymax, zmax = self.get_shape_boundary(joined_section_wires)
+            if self.slice_direction=='x':
+                min_last = xmin
+                max_last = xmax
+            if self.slice_direction=='y':
+                min_last = ymin
+                max_last = ymax
+            if self.slice_direction=='z':
+                min_last = zmin
+                max_last = zmax
+            print("direction: %s, xmin: %f, ymin: %f, zmin: %f, xmax: %f, ymax: %f, zmax: %f" % (up_or_down, xmin, ymin, zmin, xmax, ymax, zmax))
         
             sections = []
             for wire in joined_section_wires:
@@ -429,3 +440,38 @@ class surface_sweeper:
         for s in shapes:
             OCC.BRepBndLib.brepbndlib_Add(s, bbox)
         return bbox.Get()
+
+    def get_slices(self, shape, delta):
+        xmin, ymin, zmin, xmax, ymax, zmax = self.get_shape_boundary([shape])
+        direction = self.slice_direction
+        if direction=="x":
+            D = OCC.gp.gp_Dir(1., 0., 0.)  # the x direction
+        if direction=="y":
+            D = OCC.gp.gp_Dir(0., 1., 0.)  # the y direction
+        if direction=="z":
+            D = OCC.gp.gp_Dir(0., 0., 1.)  # the z direction
+        # Perform slice
+        sections = []
+        if direction=="x":
+            iMax = int((xmax-xmin)/delta)
+        if direction=="y":
+            iMax = int((ymax-ymin)/delta)
+        if direction=="z":
+            iMax = int((zmax-zmin)/delta)
+        for i in range(iMax):
+            # Create Plane defined by a point and the perpendicular direction
+            if direction=="x":
+                x = xmin+i*delta
+                Pln = OCC.gp.gp_Pln(OCC.gp.gp_Pnt(x, 0, 0), D)
+            if direction=="y":
+                y = ymin+i*delta
+                Pln = OCC.gp.gp_Pln(OCC.gp.gp_Pnt(0, y, 0), D)
+            if direction=="z":
+                z = zmin+i*delta
+                Pln = OCC.gp.gp_Pln(OCC.gp.gp_Pnt(0, 0, z), D)
+            face = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeFace(Pln).Shape()
+            # Computes Shape/Plane intersection
+            section = OCC.BRepAlgoAPI.BRepAlgoAPI_Section(shape, face)
+            if section.IsDone():
+                sections.append(section)
+        return sections
