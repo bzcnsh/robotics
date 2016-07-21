@@ -38,7 +38,7 @@ import sweeper.utilities as ut
 def show_log(function, message):
     if function in logging_functions:
         print("%s  %s: %s" % (function, datetime.datetime.now(), message))
- 
+
 def slicer(shape, deltaZ):
     # Param
     bbox = Bnd_Box()
@@ -92,32 +92,6 @@ def get_front_surface(stl_file, p1, p2):
     display.DisplayShape(orig.Shape())
 
     return CommonSurface
-
-def get_wires_from_section(section):
-    #small gap between edges
-    #self intersecting edges
-    #see issue #8
-    show_log("get_wires_from_section", "001")
-    OCCUtils.Topology.dumpTopology(section.Shape())
-    v = [-954.488298746, -49.0119292449, -287.510824921]
-    #if sweeper.contain_vertex(section.Shape(), sweeper.make_vertex_from_point(v)):
-        #pickle.dump(section.Shape(), open( "section_compound.dmp", "wb" ) )
-        #print("pickle output")
-        #time.sleep(10)
-
-    #result of an intersection between two shapes can be multiple discontinued wires, find each of them and return a list of wires
-    topo_s = Topo(section.Shape())
-    edges = list(topo_s.edges())
-    wires = sweeper.get_wires_from_edges(edges)
-    print "get_wires_from_section out"
-    map (OCCUtils.Topology.dumpTopology, wires)
-    return wires
-
-#create sections along Z axis
-#find the longest intersection line
-#sweep along this long
-#find the pipe's intersection line on the surface
-#sweep along this line
 
 def get_edges_length(aShape):
     t_length = 0
@@ -179,6 +153,11 @@ def getStripBoundary(aShape, spine, strip_width):
     OCCUtils.Topology.dumpTopology(section.Shape())
     return section
 
+#create sections along Z axis
+#find the longest intersection line
+#sweep along this long
+#find the pipe's intersection line on the surface
+#sweep along this line
 def sweep_face(aFace, initial_section, sweep_width, max_variance, up_or_down):
     #start with the initial section
     show_log("sweep_face", "0000 enter")
@@ -196,7 +175,7 @@ def sweep_face(aFace, initial_section, sweep_width, max_variance, up_or_down):
         proper_side_section_wires = []
         joined_section_wires = []
         for s in sections:
-            section_wires = section_wires + get_wires_from_section(s)
+            section_wires = section_wires + sweeper.get_wires_from_edges(list(Topo(s.Shape()).edges()))
         #a pipe intersects with surface above and below the pipe's spine line, the minimum distance between the two section lines sweep_width, or 2xpipe raidus
         #assert len(section_wires)>=1 and len(section_wires)<=2, "invalid section_wires count, should be 1 or 2"
         print("initial section_wire count 01: %i" % len(section_wires))
@@ -220,7 +199,7 @@ def sweep_face(aFace, initial_section, sweep_width, max_variance, up_or_down):
         for w in joined_section_wires:
             OCC.BRepBndLib.brepbndlib_Add(w, wire_bbox2)
         xmin, ymin, zmin_last, xmax, ymax, zmax_last = wire_bbox2.Get()
-        print("direction: %s, zmin_last: %f,  zmax_last: %f" % (up_or_down, zmin_last, zmax_last))
+        print("direction: %s, xmin: %f, ymin: %f, zmin_last: %f, xmax: %f, ymax: %f, zmax_last: %f" % (up_or_down, xmin, ymin, zmin_last, xmax, ymax, zmax_last))
     
         sections = []
         for wire in joined_section_wires:
@@ -240,8 +219,6 @@ def sweep_face(aFace, initial_section, sweep_width, max_variance, up_or_down):
     return sweep_wires
 
 def get_face_normal(face):
-    #show_log("get_face_normal 0010")
-#    OCCUtils.Topology.dumpTopology(face)
     bf = BRepGProp_Face(face)
     bounds = bf.Bounds()
     vec = gp_Vec()
@@ -310,12 +287,11 @@ display, start_display, add_menu, add_function_to_menu = init_display()
 
 logging_functions = ["get_wires_from_section", "merge_nearby_edges", "getStripBoundary", "sweep_face", "reduce_wire_edge"]
 
-max_vertex_variance = 0.001
 max_sweep_line_variance = 1.0
 sweep_width=30.0
 path_extension_distance=10.0
 
-sweeper=ut.surface_sweeper({'sweep_width': sweep_width, 'max_vertex_variance': max_vertex_variance,
+sweeper=ut.surface_sweeper({'sweep_width': sweep_width, 'max_vertex_variance': 0.001,
                             'max_sweep_line_variance': max_sweep_line_variance, 'sweep_orientation': 'y', 'wire_join_max_distance': 45})
 
 object_name='full-cylindar-sphere-top-from-rhino'

@@ -239,30 +239,27 @@ class surface_sweeper:
         new_shapes = {}
         part_vertices = None
         #print("get_connected_shapes level %i" % level)
-        if level==0:
-            #find the first common vertices between whole_shape and part_shape
-            #have to use vertices taken from whole_shape for Topo functions such as faces_from_vertex(v)
-            for v_p in topo_p.vertices():
-                for v_w in topo_w.vertices():
-                    if self.is_equal_vertex(v_p, v_w):
-                        #use v_w as our proxy in topo_w
-                        part_vertices = [v_w]
-                        break
-        if level>0:
-            part_vertices = topo_p.vertices()
-        if part_vertices:
-            for v in part_vertices:
-                if not v.__hash__() in vertices:
-                    vertices[v.__hash__()]=1
-                    if shape_type=="face":
-                        immediately_connected_shapes = topo_w.faces_from_vertex(v)
-                    if shape_type=="edge":
-                        immediately_connected_shapes = topo_w.edges_from_vertex(v)
-                    for s in immediately_connected_shapes:
-                        h = s.__hash__()
-                        if not h in hash_shapes:
-                            hash_shapes[h] = 1
-                            new_shapes[h]=s
+        #find the first common vertices between whole_shape and part_shape
+        #have to use vertices taken from whole_shape for Topo functions such as faces_from_vertex(v)
+        proxy_vertices = []
+        for v_p in topo_p.vertices():
+            for v_w in topo_w.vertices():
+                if self.is_equal_vertex(v_p, v_w):
+                    #use v_w as our proxy in topo_w
+                    if not vertices.has_key(v_w.__hash__()):
+                        proxy_vertices.append(v_w)
+        for v in proxy_vertices:
+            if not vertices.has_key(v.__hash__()):
+                vertices[v.__hash__()]=1
+                if shape_type=="face":
+                    immediately_connected_shapes = topo_w.faces_from_vertex(v)
+                if shape_type=="edge":
+                    immediately_connected_shapes = topo_w.edges_from_vertex(v)
+                for s in immediately_connected_shapes:
+                    h = s.__hash__()
+                    if not h in hash_shapes:
+                        hash_shapes[h] = 1
+                        new_shapes[h]=s
                     
         for h, s in new_shapes.items():
             self.get_connected_shapes(whole_shape, s, shape_type, hash_shapes, topo_w, vertices, level+1)
@@ -279,20 +276,35 @@ class surface_sweeper:
         return shape_list
 
     def get_wires_from_edges(self, edges):
-        wires = []
-        #if an edge is connected to a wire, add the edge to the wire
-        #else, create a new wire with the edge
+        wires= []
+        #turn every edge to a wire, then keep joining connected wires
         for e in edges:
-            found_edge_in_wire = False
-            for i in range(0, len(wires)):
-                edges_in_wire = self.get_connected_shapes(wires[i], e, "edge")
-                if len(edges_in_wire)>0:
-                    edges_in_wire.append(e)
-                    wires[i]=self.make_wire_from_edges(edges_in_wire)
-                    found_edge_in_wire = True
+            wires.append(self.make_wire_from_edges([e]))
+        joined_wires = True
+        while joined_wires:
+            joined_wires = False
+            for w1 in wires:
+                for w2 in wires:
+                    if w1!=w2:
+                        edges_in_wire = self.get_connected_shapes(w1, w2, "edge")
+                        if len(edges_in_wire)>0:
+                            topo_1 = OCCUtils.Topo(w1)
+                            topo_2 = OCCUtils.Topo(w2)
+                            edges1=list(topo_1.edges())
+                            edges2=list(topo_2.edges())
+                            new_wire = self.make_wire_from_edges(edges1+edges2)
+                            topo_new = OCCUtils.Topo(new_wire)
+                            edges_new = list(topo_new.edges())
+                            if len(edges1)+len(edges2)!=len(edges_new):
+                                #do not join if edge count change
+                                continue
+                            wires.append(new_wire)
+                            wires.remove(w1)
+                            wires.remove(w2)
+                            joined_wires = True
+                            break
+                if joined_wires:
                     break
-            if not found_edge_in_wire:
-                wires.append(self.make_wire_from_edges([e]))
         return wires
     
     def get_extension_point(self, point0, point1, length):
@@ -301,7 +313,7 @@ class surface_sweeper:
         direction=mat_p1-mat_p0
         direction=direction/scipy.linalg.norm(direction)
         mat_extension = mat_p1 + direction * length
-        return mat_extension.A[0]        
+        return mat_extension.A[0]
         
     def extend_wire(self, wire, length, direction="both"):
         #extend the first and last edge of a wire

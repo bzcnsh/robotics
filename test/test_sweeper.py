@@ -5,6 +5,8 @@ import unittest
 import sweeper.utilities as ut
 import pprint
 import pickle
+import OCCUtils
+import OCCUtils.Topology
 
 class UtilitiesTestCase(unittest.TestCase):
     def setUp(self):
@@ -224,7 +226,20 @@ class UtilitiesTestCase(unittest.TestCase):
         assert len(connected_edges)==5, "p[1] is connected to e"
         connected_edges = self.sweeper.get_connected_shapes(wires[0], edge, "edge")
         assert len(connected_edges)==0, "p[0] is not connected to e"
-        compound = pickle.load( open( "./get_front_surface 001.tmp", "rb" ) )
+        compound = pickle.load( open( "data/section_compound.dmp", "rb" ) )
+        #4 wires can be made out of this compound
+        #Z = -287: 24 + 1
+        #Z = -51, 27 + 1
+        p = [[-914.477282688, -278.65550968, -287.669982899],
+            [-914.484711616, -278.632960562, -287.670073743]]
+        e = self.sweeper.make_edge_from_points(p)
+        connected_edges = self.sweeper.get_connected_shapes(compound, e, "edge")
+        assert len(connected_edges)==24, "24 + 1 edges connected to upper half"
+        p = [[ -996.649616922, -1.43762742635, -51.487799474],
+             [-995.547572135, -46.3309348892, -51.4277677485]]
+        e = self.sweeper.make_edge_from_points(p)
+        connected_edges = self.sweeper.get_connected_shapes(compound, e, "edge")
+        assert len(connected_edges)==27, "27 + 1 edges connected to lower half"
 
     def test_get_wires_from_edges(self):    
         point_pairs=[  [[0.0,  0.0,    0.0], [1.0,  1.0,    0.0]],
@@ -254,11 +269,32 @@ class UtilitiesTestCase(unittest.TestCase):
         assert self.sweeper.is_equal_wire(w2, wires[1]), "check wire[1] content"
         w2_e = self.sweeper.make_wire_from_point_list(w2_p_e)
         assert not self.sweeper.is_equal_wire(w2_e, wires[1]), "check wire[1] content"
-        
+        compound = pickle.load( open( "data/section_compound.dmp", "rb" ) )
+        topo = OCCUtils.Topo(compound)
+        edges = list(topo.edges())
+        #import pdb; pdb.set_trace()
+        edge_counts=[24, 27, 1, 1]
+        wires = self.sweeper.get_wires_from_edges(edges)
+        assert len(wires)==4, "expect 4 wires from these edges"
+        for w in wires:
+            topo = OCCUtils.Topo(w)
+            edges = list(topo.edges())
+            assert len(edges) in edge_counts, "unexpected edge count"
+        compound = pickle.load( open( "data/section_compound_303_359.dmp", "rb" ) )
+        topo = OCCUtils.Topo(compound)
+        compound_edges = list(topo.edges())
+        wires = self.sweeper.get_wires_from_edges(compound_edges)
+        total_w_edge_count = 0
+        for w in wires:
+            e = list(OCCUtils.Topo(w).edges())
+            total_w_edge_count=total_w_edge_count+len(e)
+            #OCCUtils.Topology.dumpTopology(w)
+        assert len(compound_edges) == total_w_edge_count, "edge count should not change"
+        assert len(wires)==5, "expect 5 wires from these edges"
+
     def test_get_extension_point(self):
         p=[[0.0,0.0,0.0],[1.0,1.0,1.0]]
         p_e = self.sweeper.get_extension_point(p[0], p[1], 1.732)
-        pprint.pprint(p_e)
         assert self.sweeper.is_equal_point(p_e, [2.0, 2.0, 2.0]), "extension point is at 2,2,2"
         
     def test_extend_wire(self):
@@ -277,7 +313,7 @@ class UtilitiesTestCase(unittest.TestCase):
         assert self.sweeper.is_equal_wire(w_extended, w_tested), "the two wires should match"
         
 '''
-    def extend_wire(self, wire, length, direction="both"):
+    #def extend_wire(self, wire, length, direction="both"):
     #get_extension_point(self, point0, point1, length):
     #def get_wires_from_edges(self, edges):
     #def get_connected_shapes(self, whole_shape, part_shape, shape_type, hash_shapes=None, topo_w=None, vertices=None, level=0):
