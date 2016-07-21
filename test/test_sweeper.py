@@ -197,6 +197,14 @@ class UtilitiesTestCase(unittest.TestCase):
         assert len(make_result)==len(run_result), "make_result and run_result has different length"
         for i in range(0, len(make_result)):
             assert self.sweeper.is_equal_wire(make_result[i], run_result[i]), "join_nearby_edges unexpected result"
+        wires = pickle.load( open( "data/join_nearby_edges_001.dmp", "rb" ) )
+        run_result = self.sweeper.join_nearby_edges(wires)
+        assert len(run_result)==1, "expected 1 wire"
+        #sweep_face_001_section.dmp is the compound whose edges later created wires in join_nearby_edges_001.dmp
+        #section = pickle.load( open( "data/sweep_face_001_section.dmp", "rb" ) )
+        #print("section")
+        #OCCUtils.Topology.dumpTopology(section)
+        
     
     def test_get_connected_shapes(self):
         p=[
@@ -311,8 +319,16 @@ class UtilitiesTestCase(unittest.TestCase):
         w_extended = self.sweeper.make_wire_from_point_list(p_extended)
         w_tested = self.sweeper.extend_wire(w, 1.732, "both")
         assert self.sweeper.is_equal_wire(w_extended, w_tested), "the two wires should match"
-        
+    
+    def test_get_strip_boundary(self):
+        assert "False", "TBD get_strip_boundary"
+
+    def test_sweep_face(self):
+        assert "False", "TBD sweep_face"
+            
 '''
+    def sweep_face(self, aFace, initial_section, up_or_down):
+    get_strip_boundary(shape, spine):
     #def extend_wire(self, wire, length, direction="both"):
     #get_extension_point(self, point0, point1, length):
     #def get_wires_from_edges(self, edges):

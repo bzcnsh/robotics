@@ -1,7 +1,5 @@
-from OCCUtils.Topology import WireExplorer
-from OCC.Bnd import Bnd_Box
-
 import OCC.BRepBuilderAPI
+import OCC.BRepOffsetAPI
 import OCC.BRep
 import OCC.TopoDS
 import OCCUtils
@@ -9,12 +7,14 @@ import OCC.TopTools
 import OCC.gp
 import OCC.BRep
 import OCC.BRepExtrema
+import OCC.Bnd
 
 import pprint
 import time
 import math
 import scipy.linalg
 import numpy
+import pickle
 
 class surface_sweeper:
     def __init__(self, parameters={}):
@@ -24,6 +24,7 @@ class surface_sweeper:
         if parameters.has_key('sweep_orientation'): self.sweep_orientation = parameters['sweep_orientation']
         if parameters.has_key('sweep_surface'): self.sweep_surface = parameters['sweep_surface']
         if parameters.has_key('wire_join_max_distance'): self.wire_join_max_distance = parameters['wire_join_max_distance']
+        if parameters.has_key('path_extension_distance'): self.path_extension_distance = parameters['path_extension_distance']
     
     #reduce number of vertices on a wire, to smoothen robotic arm's movement
     def reduce_wire_edge(self, wire):
@@ -100,6 +101,9 @@ class surface_sweeper:
     def make_edge_from_vertices(self, vertice1, vertice2):
         make_edge = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeEdge(vertice1, vertice2)
         while not make_edge.IsDone():
+            print("make_edge_from_vertices")
+            OCCUtils.Topology.dumpTopology(vertice1)
+            OCCUtils.Topology.dumpTopology(vertice2)
             time.sleep(0.1)
         return make_edge.Edge()
 
@@ -226,6 +230,16 @@ class surface_sweeper:
                     del ordered_wires[i+1]
                     merged = True
                     break
+        #sometimes a section compound can have multiple edges with the same vertex
+        for i in range(0, len(ordered_wires)):
+            delete_dup = True
+            while(delete_dup):
+                delete_dup = False
+                for j in range(0, len(ordered_wires[i])-1):
+                    if self.is_equal_vertex(ordered_wires[i][j], ordered_wires[i][j+1]):
+                        del ordered_wires[i][j]
+                        delete_dup = True
+                        break
         output_wires = map(self.make_wire_from_vertices, ordered_wires)
         return output_wires
     
@@ -335,3 +349,82 @@ class surface_sweeper:
             wire = self.extend_wire(wire, length, "begin")
             wire = self.extend_wire(wire, length, "end")
             return wire
+
+    def get_strip_boundary(self, aShape, spine):
+        pipe = OCC.BRepOffsetAPI.BRepOffsetAPI_MakePipeShell(spine)
+        pipe.SetTransitionMode(OCC.BRepBuilderAPI.BRepBuilderAPI_RoundCorner)
+        for v in self.get_ordered_vertices_from_wire(spine):
+            brt = OCC.BRep.BRep_Tool()
+            pnt = brt.Pnt(v)
+            circle = OCC.gp.gp_Circ(OCC.gp.gp_Ax2(pnt, OCC.gp.gp_DZ()), self.sweep_width)
+            profile_edge = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeWire(OCC.BRepBuilderAPI.BRepBuilderAPI_MakeEdge(circle).Edge())
+            pipe.Add(profile_edge.Shape(), False, True)
+            break
+        pipe.Build()
+        while not pipe.IsDone():
+            print("waiting for pipe")
+            time.sleep(0.01)
+        section = OCC.BRepAlgoAPI.BRepAlgoAPI_Section(pipe.Shape(), aShape)
+        #section.Approximation(False)
+        section.Build()
+        while not section.IsDone():
+            print("getStripBoundary", "waiting for section")
+            time.sleep(0.01)
+        return section
+
+    def sweep_face(self, aFace, initial_section, up_or_down):
+        #start with the initial section
+        #import pdb; pdb.set_trace()
+        sweep_wires = []
+        sections = [initial_section]
+        zmin_last=-99999999
+        zmax_last=99999999
+        #one sweep can have multiple segments, each segment has its own spine wire
+        #a spine wire produces one or two intersection with the surface (above and below the spine)
+        #the above and below sections are mixed in a "compound" shape, each section can have multiple wires, due to underlying software bug, wires belong to same section should be merged
+        #distance between the above and below sections is 2 x sweep_width
+        while sections:
+            section_wires = []
+# take dump for specific problem
+#            for s in sections:
+#                p = [-448.702808548, -866.726174489, -208.484265004]
+#                v = self.make_vertex_from_point(p)
+#                if self.contain_vertex(s.Shape(), v):
+#                    pickle.dump(s.Shape(), open( "sweep_face_001_section.dmp", "wb" ) )
+#                    assert False, "took dump"
+#                    break
+
+            proper_side_section_wires = []
+            joined_section_wires = []
+            for s in sections:
+                section_wires = section_wires + self.get_wires_from_edges(list(OCCUtils.Topo(s.Shape()).edges()))
+            #a pipe intersects with surface above and below the pipe's spine line, the minimum distance between the two section lines sweep_width, or 2xpipe raidus
+            #compare wire with previous section wire
+            for w in section_wires:
+                wire_bbox1 = OCC.Bnd.Bnd_Box()
+                OCC.BRepBndLib.brepbndlib_Add(w, wire_bbox1)
+                xmin, ymin, zmin, xmax, ymax, zmax = wire_bbox1.Get()
+                #print("zmin: %f, zmax: %f" % (zmin, zmax))
+                if (up_or_down=='up' and zmin>zmin_last) or (up_or_down=='down' and zmax<zmax_last):
+                    proper_side_section_wires.append(w)
+            if not proper_side_section_wires:
+                break
+            #print("proper side section_wire count 02: %i" % len(proper_side_section_wires))
+            joined_section_wires = self.join_nearby_edges(proper_side_section_wires)
+            #print("joined section_wire count 03: %i" % len(joined_section_wires))
+            wire_bbox2 = OCC.Bnd.Bnd_Box()
+            #set zmin_last, zmax_last
+            for w in joined_section_wires:
+                OCC.BRepBndLib.brepbndlib_Add(w, wire_bbox2)
+            xmin, ymin, zmin_last, xmax, ymax, zmax_last = wire_bbox2.Get()
+            print("direction: %s, xmin: %f, ymin: %f, zmin_last: %f, xmax: %f, ymax: %f, zmax_last: %f" % (up_or_down, xmin, ymin, zmin_last, xmax, ymax, zmax_last))
+        
+            sections = []
+            for wire in joined_section_wires:
+                wire = self.reduce_wire_edge(wire)
+                extended_wires = self.extend_wire(wire, self.path_extension_distance, "both")
+                section = self.get_strip_boundary(aFace, extended_wires)
+                if section:
+                    sections.append(section)
+            sweep_wires = sweep_wires + joined_section_wires
+        return sweep_wires
