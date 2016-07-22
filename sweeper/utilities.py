@@ -339,19 +339,20 @@ class surface_sweeper:
         
     def extend_wire(self, wire, length, direction="both"):
         #extend the first and last edge of a wire
+        if length<=0: return wire 
         if direction=="begin":
             vertices = self.get_ordered_vertices_from_wire(wire)
             begin_point0 = self.get_point_from_vertex(vertices[0])
             begin_point1 = self.get_point_from_vertex(vertices[1])
             extension_vertex = self.make_vertex_from_point(self.get_extension_point(begin_point1, begin_point0, length))
-            vertices[0] = extension_vertex
+            vertices.insert(0, extension_vertex)
             return self.make_wire_from_vertices(vertices)
         if direction=="end":
             vertices = self.get_ordered_vertices_from_wire(wire)
             end_point0 = self.get_point_from_vertex(vertices[len(vertices)-1]) 
             end_point1 = self.get_point_from_vertex(vertices[len(vertices)-2]) 
             extension_vertex = self.make_vertex_from_point(self.get_extension_point(end_point1, end_point0, length))
-            vertices[len(vertices)-1] = extension_vertex 
+            vertices.append(extension_vertex) 
             return self.make_wire_from_vertices(vertices)
         if direction=="both":
             wire = self.extend_wire(wire, length, "begin")
@@ -360,7 +361,7 @@ class surface_sweeper:
 
     def get_strip_boundary(self, aShape, spine):
         pipe = OCC.BRepOffsetAPI.BRepOffsetAPI_MakePipeShell(spine)
-        pipe.SetTransitionMode(OCC.BRepBuilderAPI.BRepBuilderAPI_RoundCorner)
+        #pipe.SetTransitionMode(OCC.BRepBuilderAPI.BRepBuilderAPI_RoundCorner)
         for v in self.get_ordered_vertices_from_wire(spine):
             brt = OCC.BRep.BRep_Tool()
             pnt = brt.Pnt(v)
@@ -382,7 +383,6 @@ class surface_sweeper:
 
     def sweep_face(self, aFace, initial_section, up_or_down):
         #start with the initial section
-        #import pdb; pdb.set_trace()
         sweep_wires = []
         sections = [initial_section]
         min_last=-99999999
