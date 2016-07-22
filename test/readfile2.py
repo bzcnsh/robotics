@@ -58,11 +58,11 @@ def get_front_surface(stl_file, p1, p2):
     show_log("get_front_surface", "012")
 #   BRepAlgoAPI_Common takes 3 minutes
     CommonSurface = BRepAlgoAPI_Common(box, stl_shape).Shape()
-#    ais_stl_shape = display.DisplayShape(stl_shape)
+    ais_stl_shape = display.DisplayShape(stl_shape)
 #    ais_box = display.DisplayShape(box)
 #    ais_common = display.DisplayShape(CommonSurface)
 #    display.Context.SetTransparency(ais_box, 0.8)
-#    display.Context.SetTransparency(ais_stl_shape, 0.8)
+    display.Context.SetTransparency(ais_stl_shape, 0.8)
 #    orig = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeVertex(gp_Pnt(0,0,0))
 #    display.DisplayShape(orig.Shape())
 
@@ -149,32 +149,33 @@ def format_wire_for_roboDK(wire, is_reverse=False):
         wire.append({"location": [pnt.X(), pnt.Y(), pnt.Z()], "direction": direction, "path_direction": [path_direction.item(0),path_direction.item(1),path_direction.item(2)]})
     return wire
     
-#display, start_display, add_menu, add_function_to_menu = init_display()
+display, start_display, add_menu, add_function_to_menu = init_display()
 
 logging_functions = ["get_wires_from_section", "merge_nearby_edges", "getStripBoundary", "sweep_face", "reduce_wire_edge"]
 object_name='full-cylindar-sphere-top-from-rhino'
 #work item is in bound by box [-1000, -1000, -1000[, [1000, 2000, 1000]
 blocks = [
-#          {'blockid': 'sphere_z_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,400.0], 'view_port_top_right': [4000.0,-400.0,1200.0], 'base_position': [0, 200, -200], 'object_center': [0,0,0]},
-#          {'blockid': 'sphere_z_middle_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,-400.0], 'view_port_top_right': [4000.0,-400.0,400.0], 'base_position': [0, 200, 0], 'object_center': [0,0,0]},
-#          {'blockid': 'sphere_z_middle_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-400.0], 'view_port_top_right': [0.0,-400.0,400.0], 'base_position': [0, 200, 0], 'object_center': [0,0,0]},
-#          {'blockid': 'sphere_z_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-1200.0], 'view_port_top_right': [4000.0,-400.0,-400.0], 'base_position': [0, 600, -800], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_z_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,400.0], 'view_port_top_right': [4000.0,-400.0,1200.0], 'base_position': [0, 200, -200], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_z_middle_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,-400.0], 'view_port_top_right': [4000.0,-400.0,400.0], 'base_position': [0, 200, 0], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_z_middle_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-400.0], 'view_port_top_right': [0.0,-400.0,400.0], 'base_position': [0, 200, 0], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_z_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-1200.0], 'view_port_top_right': [4000.0,-400.0,-400.0], 'base_position': [0, 600, -800], 'object_center': [0,0,0]},
 
-#          {'blockid': 'sphere_cylindar_z_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,-400.0,400.0], 'view_port_top_right': [4000.0,400.0,1200.0], 'base_position': [0, 800, -300], 'object_center': [0,0,0]},
-#          {'blockid': 'sphere_cylindar_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0,-400.0,-400.0], 'view_port_top_right': [4000.0,400.0,400.0], 'base_position': [0, 800, 0], 'object_center': [0,0,0]},
-#          {'blockid': 'sphere_cylindar_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-400.0,-400.0], 'view_port_top_right': [0.0,400.0,400.0], 'base_position': [0, 800, 0], 'object_center': [0,0,0]},
-#          {'blockid': 'sphere_cylindar_z_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,-400.0,-1200.0], 'view_port_top_right': [4000.0,400.0,-400.0], 'base_position': [0, 800, -800], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,-400.0,400.0], 'view_port_top_right': [4000.0,400.0,1200.0], 'base_position': [0, 800, -300], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0,-400.0,-400.0], 'view_port_top_right': [4000.0,400.0,400.0], 'base_position': [0, 800, 0], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-400.0,-400.0], 'view_port_top_right': [0.0,400.0,400.0], 'base_position': [0, 800, 0], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,-400.0,-1200.0], 'view_port_top_right': [4000.0,400.0,-400.0], 'base_position': [0, 800, -800], 'object_center': [0,0,0]},
 
-#          {'blockid': 'cylindar_y0_z_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,400.0], 'view_port_top_right': [4000.0,1200.0,1200.0], 'base_position': [0, 400, -400], 'object_center': [0,0,0]},
+          {'blockid': 'cylindar_y0_z_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,400.0], 'view_port_top_right': [4000.0,1200.0,1200.0], 'base_position': [0, 400, -400], 'object_center': [0,0,0]},
           {'blockid': 'cylindar_y0_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,400.0,-400.0], 'view_port_top_right': [0.0,1200.0,400.0], 'base_position': [0, 1600, 0], 'object_center': [0,0,0]},
-#          {'blockid': 'cylindar_y0_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,400.0,-400.0], 'view_port_top_right': [4000.0,1200.0,400.0], 'base_position': [0, 1600, 0], 'object_center': [0,0,0]},
-#          {'blockid': 'cylindar_y0_z_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,-1200.0], 'view_port_top_right': [4000.0,1200.0,-400.0], 'base_position': [0, 1600, -400], 'object_center': [0,0,0]},
+          {'blockid': 'cylindar_y0_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,400.0,-400.0], 'view_port_top_right': [4000.0,1200.0,400.0], 'base_position': [0, 1600, 0], 'object_center': [0,0,0]},
+          {'blockid': 'cylindar_y0_z_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,-1200.0], 'view_port_top_right': [4000.0,1200.0,-400.0], 'base_position': [0, 1600, -400], 'object_center': [0,0,0]},
           ]
+
 for b in blocks:
     print("blockid: %s" % b['blockid'])
     sweeper=ut.surface_sweeper({'sweep_width': 30.0, 'max_vertex_variance': 0.001, 'max_sweep_line_variance': 2.0,
                                 'sweep_direction': b['sweep_direction'], 'slice_direction': b['slice_direction'], 
-                                'wire_join_max_distance': 10, 'path_extension_distance': 0.0, 'object_center': b['object_center']})
+                                'wire_join_max_distance': 10, 'path_extension_distance': 10.0, 'object_center': b['object_center']})
     vp_bf=b['view_port_bottom_left']
     vp_tr=b['view_port_top_right']
     front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(vp_bf[0], vp_bf[1], vp_bf[2]), gp_Pnt(vp_tr[0], vp_tr[1], vp_tr[2]))
@@ -185,8 +186,8 @@ for b in blocks:
     sweep_wires = sweep_wires_upside + sweep_wires_downside
     xmin, ymin, Zmin, xmax, ymax, Zmax = sweeper.get_shape_boundary(sweep_wires)
     wires_roboDK = {'wires': [], 'boundary': [[xmin, ymin, Zmin], [xmax, ymax, Zmax]], 'base_position':b['base_position']}
-    #ais_front = display.DisplayShape(front_face)
-    #display.Context.SetTransparency(ais_front, 0.8)
+    ais_front = display.DisplayShape(front_face)
+    display.Context.SetTransparency(ais_front, 0.8)
 
     for idx, w in enumerate(sweep_wires):
         #smoothen wire, remove unneeded edges from wire
@@ -195,7 +196,7 @@ for b in blocks:
         wire_roboDK = format_wire_for_roboDK(w, (idx % 2)==0)
         wires_roboDK['wires'].append(wire_roboDK)
         
- #       display.DisplayShape(w)
+        display.DisplayShape(w)
     
     outstream = open('./curves/'+object_name+b['blockid']+'.yml', 'w')
     yaml.dump(wires_roboDK, outstream, default_flow_style=False)
@@ -208,5 +209,5 @@ for b in blocks:
                 direction = v['direction']
                 csv_outstream.write("%f, %f, %f, %f, %f, %f\n" % (location[0], location[1], location[2], direction[0], direction[1], direction[2]))
 
-#display.FitAll()
-#start_display()
+display.FitAll()
+start_display()

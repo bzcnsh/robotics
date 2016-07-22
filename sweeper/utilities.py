@@ -361,7 +361,7 @@ class surface_sweeper:
 
     def get_strip_boundary(self, aShape, spine):
         pipe = OCC.BRepOffsetAPI.BRepOffsetAPI_MakePipeShell(spine)
-        #pipe.SetTransitionMode(OCC.BRepBuilderAPI.BRepBuilderAPI_RoundCorner)
+        pipe.SetTransitionMode(OCC.BRepBuilderAPI.BRepBuilderAPI_RoundCorner)
         for v in self.get_ordered_vertices_from_wire(spine):
             brt = OCC.BRep.BRep_Tool()
             pnt = brt.Pnt(v)
