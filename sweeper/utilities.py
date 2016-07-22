@@ -468,13 +468,14 @@ class surface_sweeper:
         for i in range(iMax):
             # Create Plane defined by a point and the perpendicular direction
             if direction=="x":
-                x = xmin+i*delta
+                #0.5 so the first slice is not at edge
+                x = xmin+(i+0.5)*delta
                 Pln = OCC.gp.gp_Pln(OCC.gp.gp_Pnt(x, 0, 0), D)
             if direction=="y":
-                y = ymin+i*delta
+                y = ymin+(i+0.5)*delta
                 Pln = OCC.gp.gp_Pln(OCC.gp.gp_Pnt(0, y, 0), D)
             if direction=="z":
-                z = zmin+i*delta
+                z = zmin+(i+0.5)*delta
                 Pln = OCC.gp.gp_Pln(OCC.gp.gp_Pnt(0, 0, z), D)
             face = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeFace(Pln).Shape()
             # Computes Shape/Plane intersection
