@@ -156,18 +156,19 @@ object_name='full-cylindar-sphere-top-from-rhino'
 #work item is in bound by box [-1000, -1000, -1000[, [1000, 2000, 1000]
 blocks = [
           {'blockid': 'sphere_z_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,400.0], 'view_port_top_right': [4000.0,-400.0,1200.0], 'base_position': [0, 200, -200], 'object_center': [0,0,0]},
-          {'blockid': 'sphere_z_middle', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-400.0], 'view_port_top_right': [4000.0,-400.0,400.0], 'base_position': [0, 200, 0], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_z_middle_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,-400.0], 'view_port_top_right': [4000.0,-400.0,400.0], 'base_position': [0, 200, 0], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_z_middle_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-400.0], 'view_port_top_right': [0.0,-400.0,400.0], 'base_position': [0, 200, 0], 'object_center': [0,0,0]},
           {'blockid': 'sphere_z_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-1200.0], 'view_port_top_right': [4000.0,-400.0,-400.0], 'base_position': [0, 600, -800], 'object_center': [0,0,0]},
 
-          {'blockid': 'sphere_cylindar_z_plus', 'sweep_direction': 'x', 'slice_direction': 'y', 'view_port_bottom_left':[-4000.0,-400.0,400.0], 'view_port_top_right': [4000.0,400.0,1200.0], 'base_position': [0, 800, -200], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,-400.0,400.0], 'view_port_top_right': [4000.0,400.0,1200.0], 'base_position': [0, 700, 0], 'object_center': [0,0,0]},
           {'blockid': 'sphere_cylindar_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0,-400.0,-400.0], 'view_port_top_right': [4000.0,400.0,400.0], 'base_position': [0, 800, 0], 'object_center': [0,0,0]},
           {'blockid': 'sphere_cylindar_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-400.0,-400.0], 'view_port_top_right': [0.0,400.0,400.0], 'base_position': [0, 800, 0], 'object_center': [0,0,0]},
-          {'blockid': 'sphere_cylindar_z_minus', 'sweep_direction': 'x', 'slice_direction': 'y', 'view_port_bottom_left':[-4000.0,-400.0,-1200.0], 'view_port_top_right': [4000.0,400.0,-400.0], 'base_position': [0, 1200, -800], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,-400.0,-1200.0], 'view_port_top_right': [4000.0,400.0,-400.0], 'base_position': [0, 800, -800], 'object_center': [0,0,0]},
 
           {'blockid': 'cylindar_y0_z_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,400.0], 'view_port_top_right': [4000.0,1200.0,1200.0], 'base_position': [0, 1600, -200], 'object_center': [0,0,0]},
           {'blockid': 'cylindar_y0_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,400.0,-400.0], 'view_port_top_right': [0.0,1200.0,400.0], 'base_position': [0, 1600, 0], 'object_center': [0,0,0]},
           {'blockid': 'cylindar_y0_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,400.0,-400.0], 'view_port_top_right': [4000.0,1200.0,400.0], 'base_position': [0, 1600, 0], 'object_center': [0,0,0]},
-          {'blockid': 'cylindar_y0_z_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,-1200.0], 'view_port_top_right': [4000.0,1200.0,-400.0], 'base_position': [0, 2000, -800], 'object_center': [0,0,0]},
+          {'blockid': 'cylindar_y0_z_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,-1200.0], 'view_port_top_right': [4000.0,1200.0,-400.0], 'base_position': [0, 1600, -800], 'object_center': [0,0,0]},
           ]
 for b in blocks:
     print("blockid: %s" % b['blockid'])
