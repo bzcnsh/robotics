@@ -329,8 +329,12 @@ class UtilitiesTestCase(unittest.TestCase):
 
     def test_sweep_face(self):
         assert False, "TBD get_slices"
-            
+        
+    def test_get_face_normal(self):
+        assert False, "TBD get_face_normal"
+
 '''
+    def get_face_normal(self, face):
     def get_slices(self, shape, delta):
     def sweep_face(self, aFace, initial_section, up_or_down):
     get_strip_boundary(shape, spine):

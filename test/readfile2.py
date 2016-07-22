@@ -89,18 +89,6 @@ def get_longest_slice(aShape, delta):
             max_slice = s
     return max_slice
 
-def get_face_normal(face):
-    bf = BRepGProp_Face(face)
-    bounds = bf.Bounds()
-    vec = gp_Vec()
-    zDir = gp().DZ()
-    pt = gp_Pnt()
-    #get a normal vector to the face
-    bf.Normal(bounds[0],bounds[1],pt,vec)
-    #get cos between normal and x axis [1,0,0]
-    direction = gp_Dir(vec)
-    return direction
-
 def get_vertex_normal(vertex, shape):
     #a vertex belongs to multiple faces on the shape
     #can only choose one face when calculating vertex normal
@@ -124,7 +112,7 @@ def get_vertex_normal(vertex, shape):
         wire=topo_shape.wires_from_face(nearest_shape).next()
         face=topo_shape.faces_from_wire(wire).next()
     assert face, "unhandled nearest_shape type"
-    n = get_face_normal(face)
+    n = sweeper.get_face_normal(face)
     return n
 
 def format_wire_for_roboDK(wire, is_reverse=False):
@@ -150,36 +138,42 @@ def format_wire_for_roboDK(wire, is_reverse=False):
             last_path_direction = path_direction
         else:
             path_direction = last_path_direction
-        #direction for tool is towards face, which is reverse of the face's normal
-        wire.append({"location": [pnt.X(), pnt.Y(), pnt.Z()], "direction": [-normal.X(), -normal.Y(), -normal.Z()], "path_direction": [path_direction.item(0),path_direction.item(1),path_direction.item(2)]})
+        #direction should be away from object_center
+        p1 = [pnt.X()+normal.X(), pnt.Y()+normal.Y(), pnt.Z()+normal.Z()]
+        p2 = [pnt.X()-normal.X(), pnt.Y()-normal.Y(), pnt.Z()-normal.Z()]
+        #normal vector should point towards object center
+        if sweeper.get_distance_points(p1, sweeper.object_center) < sweeper.get_distance_points(p2, sweeper.object_center):
+            direction = [normal.X(), normal.Y(), normal.Z()]
+        else:
+            direction = [-normal.X(), -normal.Y(), -normal.Z()]
+        wire.append({"location": [pnt.X(), pnt.Y(), pnt.Z()], "direction": direction, "path_direction": [path_direction.item(0),path_direction.item(1),path_direction.item(2)]})
     return wire
     
 display, start_display, add_menu, add_function_to_menu = init_display()
 
 logging_functions = ["get_wires_from_section", "merge_nearby_edges", "getStripBoundary", "sweep_face", "reduce_wire_edge"]
-
 object_name='full-cylindar-sphere-top-from-rhino'
 #work item is in bound by box [-1000, -1000, -1000[, [1000, 2000, 1000]
 blocks = [
-          {'blockid': 'sphere_z_middle', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-400.0], 'view_port_top_right': [4000.0,-400.0,400.0], 'base_position': [0, -400, 0]},
-          {'blockid': 'sphere_z_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,400.0], 'view_port_top_right': [4000.0,-400.0,1200.0], 'base_position': [0, -400, 200] },
-          {'blockid': 'sphere_z_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-1200.0], 'view_port_top_right': [4000.0,-400.0,-400.0], 'base_position': [0, -400, -200]},
-          
-          {'blockid': 'sphere_cylindar_z_plus', 'sweep_direction': 'x', 'slice_direction': 'y', 'view_port_bottom_left':[-4000.0,-400.0,400.0], 'view_port_top_right': [4000.0,400.0,1200.0], 'base_position': [0, 0, 0]},
-          {'blockid': 'sphere_cylindar_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0,-400.0,-400.0], 'view_port_top_right': [4000.0,400.0,400.0], 'base_position': [0, 0, 0] },
-          {'blockid': 'sphere_cylindar_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-400.0,-400.0], 'view_port_top_right': [0.0,400.0,400.0], 'base_position': [0, 0, 0] },
-          {'blockid': 'sphere_cylindar_z_minus', 'sweep_direction': 'x', 'slice_direction': 'y', 'view_port_bottom_left':[-4000.0,-400.0,-1200.0], 'view_port_top_right': [4000.0,400.0,-400.0], 'base_position': [0, 600, -600] },
+          {'blockid': 'sphere_z_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,400.0], 'view_port_top_right': [4000.0,-400.0,1200.0], 'base_position': [0, 200, -200], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_z_middle', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-400.0], 'view_port_top_right': [4000.0,-400.0,400.0], 'base_position': [0, 200, 0], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_z_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-1200.0], 'view_port_top_right': [4000.0,-400.0,-400.0], 'base_position': [0, 600, -800], 'object_center': [0,0,0]},
 
-          {'blockid': 'cylindar_y0_z_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,400.0], 'view_port_top_right': [4000.0,1200.0,1200.0], 'base_position': [0, 800, 0] },
-          {'blockid': 'cylindar_y0_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,400.0,-400.0], 'view_port_top_right': [0.0,1200.0,400.0], 'base_position': [0, 800, 0] },
-          {'blockid': 'cylindar_y0_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,400.0,-400.0], 'view_port_top_right': [4000.0,1200.0,400.0], 'base_position': [0, 800, 0] },
-          {'blockid': 'cylindar_y0_z_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,-1200.0], 'view_port_top_right': [4000.0,1200.0,-400.0], 'base_position': [0, 1400, -600] },
+          {'blockid': 'sphere_cylindar_z_plus', 'sweep_direction': 'x', 'slice_direction': 'y', 'view_port_bottom_left':[-4000.0,-400.0,400.0], 'view_port_top_right': [4000.0,400.0,1200.0], 'base_position': [0, 800, -200], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0,-400.0,-400.0], 'view_port_top_right': [4000.0,400.0,400.0], 'base_position': [0, 800, 0], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-400.0,-400.0], 'view_port_top_right': [0.0,400.0,400.0], 'base_position': [0, 800, 0], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_minus', 'sweep_direction': 'x', 'slice_direction': 'y', 'view_port_bottom_left':[-4000.0,-400.0,-1200.0], 'view_port_top_right': [4000.0,400.0,-400.0], 'base_position': [0, 1200, -800], 'object_center': [0,0,0]},
+
+          {'blockid': 'cylindar_y0_z_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,400.0], 'view_port_top_right': [4000.0,1200.0,1200.0], 'base_position': [0, 1600, -200], 'object_center': [0,0,0]},
+          {'blockid': 'cylindar_y0_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,400.0,-400.0], 'view_port_top_right': [0.0,1200.0,400.0], 'base_position': [0, 1600, 0], 'object_center': [0,0,0]},
+          {'blockid': 'cylindar_y0_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,400.0,-400.0], 'view_port_top_right': [4000.0,1200.0,400.0], 'base_position': [0, 1600, 0], 'object_center': [0,0,0]},
+          {'blockid': 'cylindar_y0_z_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,-1200.0], 'view_port_top_right': [4000.0,1200.0,-400.0], 'base_position': [0, 2000, -800], 'object_center': [0,0,0]},
           ]
 for b in blocks:
     print("blockid: %s" % b['blockid'])
     sweeper=ut.surface_sweeper({'sweep_width': 120.0, 'max_vertex_variance': 0.001, 'max_sweep_line_variance': 2.0,
                                 'sweep_direction': b['sweep_direction'], 'slice_direction': b['slice_direction'], 
-                                'wire_join_max_distance': 45, 'path_extension_distance': 10.0})
+                                'wire_join_max_distance': 45, 'path_extension_distance': 10.0, 'object_center': b['object_center']})
     vp_bf=b['view_port_bottom_left']
     vp_tr=b['view_port_top_right']
     front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(vp_bf[0], vp_bf[1], vp_bf[2]), gp_Pnt(vp_tr[0], vp_tr[1], vp_tr[2]))

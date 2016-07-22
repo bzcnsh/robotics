@@ -8,6 +8,7 @@ import OCC.gp
 import OCC.BRep
 import OCC.BRepExtrema
 import OCC.Bnd
+from OCC.BRepGProp import BRepGProp_Face
 
 import pprint
 import time
@@ -26,7 +27,8 @@ class surface_sweeper:
         if parameters.has_key('sweep_surface'): self.sweep_surface = parameters['sweep_surface']
         if parameters.has_key('wire_join_max_distance'): self.wire_join_max_distance = parameters['wire_join_max_distance']
         if parameters.has_key('path_extension_distance'): self.path_extension_distance = parameters['path_extension_distance']
-    
+        if parameters.has_key('object_center'): self.object_center = parameters['object_center']
+
     #reduce number of vertices on a wire, to smoothen robotic arm's movement
     def reduce_wire_edge(self, wire):
         #a vertex can be removed if it's sufficiently close to the line between the two vertices on its side
@@ -149,9 +151,14 @@ class surface_sweeper:
         pnt = brt.Pnt(OCC.TopoDS.topods_Vertex(vertex))
         return (pnt.X(), pnt.Y(), pnt.Z())
 
+    def get_distance_vertices(self, v1, v2):
+        return self.get_distance_points(self.get_point_from_vertex(v1), self.get_point_from_vertex(v2)) 
+        
+    def get_distance_points(self, p1, p2):
+        return math.sqrt( math.pow(p1[0]-p2[0], 2) + math.pow(p1[1]-p2[1], 2) + math.pow(p1[2]-p2[2], 2))
+
     def is_equal_point(self, p1, p2):
-        distance = math.sqrt( math.pow(p1[0]-p2[0], 2) + math.pow(p1[1]-p2[1], 2) + math.pow(p1[2]-p2[2], 2))
-        return distance<self.max_vertex_variance
+        return self.get_distance_points(p1, p2)<self.max_vertex_variance
     
     def is_equal_vertex(self, v1, v2):
         return self.is_equal_point(self.get_point_from_vertex(v1), self.get_point_from_vertex(v2))
@@ -475,3 +482,13 @@ class surface_sweeper:
             if section.IsDone():
                 sections.append(section)
         return sections
+
+    def get_face_normal(self, face):
+        bf = OCC.BRepGProp.BRepGProp_Face(face)
+        bounds = bf.Bounds()
+        vec = OCC.gp.gp_Vec()
+        pt = OCC.gp.gp_Pnt()
+        #get a normal vector to the face
+        bf.Normal(bounds[0],bounds[1],pt,vec)
+        direction = OCC.gp.gp_Dir(vec)
+        return direction
