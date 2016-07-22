@@ -68,13 +68,6 @@ def get_front_surface(stl_file, p1, p2):
 
     return CommonSurface
 
-def get_edges_length(aShape):
-    t_length = 0
-    for e in Topo(aShape).edges():
-        oe = OCCUtils.edge.Edge(e)
-        t_length += oe.length()
-    return t_length
-
 def get_longest_slice(aShape, delta):
     #create sections along Z axis
     slices = sweeper.get_slices(aShape, delta)
@@ -83,7 +76,7 @@ def get_longest_slice(aShape, delta):
     for s in slices:
         #find the longest intersection line with the smallest z value
         #slices start from small z
-        slice_length=get_edges_length(s.Shape())
+        slice_length=sweeper.get_edges_length(s.Shape())
         if slice_length > max_slice_length+0.01:
             max_slice_length = slice_length
             max_slice = s
@@ -155,33 +148,42 @@ logging_functions = ["get_wires_from_section", "merge_nearby_edges", "getStripBo
 object_name='full-cylindar-sphere-top-from-rhino'
 #work item is in bound by box [-1000, -1000, -1000[, [1000, 2000, 1000]
 blocks = [
-          {'blockid': 'sphere_z_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,400.0], 'view_port_top_right': [4000.0,-400.0,1200.0], 'base_position': [0, 200, -200], 'object_center': [0,0,0]},
-          {'blockid': 'sphere_z_middle_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,-400.0], 'view_port_top_right': [4000.0,-400.0,400.0], 'base_position': [0, 200, 0], 'object_center': [0,0,0]},
-          {'blockid': 'sphere_z_middle_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-400.0], 'view_port_top_right': [0.0,-400.0,400.0], 'base_position': [0, 200, 0], 'object_center': [0,0,0]},
-          {'blockid': 'sphere_z_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-1200.0], 'view_port_top_right': [4000.0,-400.0,-400.0], 'base_position': [0, 600, -800], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_z_plus_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,400.0], 'view_port_top_right': [0.0,-400.0,1200.0], 'base_position': [-200, 200, -200], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_z_plus_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,400.0], 'view_port_top_right': [4000.0,-400.0,1200.0], 'base_position': [200, 200, -200], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_z_middle_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,-400.0], 'view_port_top_right': [4000.0,-400.0,400.0], 'base_position': [-200, 200, -200], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_z_middle_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-400.0], 'view_port_top_right': [0.0,-400.0,400.0], 'base_position': [200, 200, -200], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_z_minus_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-1200.0], 'view_port_top_right': [0.0,-400.0,-400.0], 'base_position': [-200, 200, -800], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_z_minus_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,-1200.0], 'view_port_top_right': [4000.0,-400.0,-400.0], 'base_position': [200, 200, -800], 'object_center': [0,0,0]},
 
-          {'blockid': 'sphere_cylindar_z_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,-400.0,400.0], 'view_port_top_right': [4000.0,400.0,1200.0], 'base_position': [0, 800, -300], 'object_center': [0,0,0]},
-          {'blockid': 'sphere_cylindar_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0,-400.0,-400.0], 'view_port_top_right': [4000.0,400.0,400.0], 'base_position': [0, 800, 0], 'object_center': [0,0,0]},
-          {'blockid': 'sphere_cylindar_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-400.0,-400.0], 'view_port_top_right': [0.0,400.0,400.0], 'base_position': [0, 800, 0], 'object_center': [0,0,0]},
-          {'blockid': 'sphere_cylindar_z_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,-400.0,-1200.0], 'view_port_top_right': [4000.0,400.0,-400.0], 'base_position': [0, 800, -800], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_plus_x_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,-400.0,400.0], 'view_port_top_right': [0.0,400.0,1200.0], 'base_position': [-200, 1000, -200], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_plus_x_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,-400.0,400.0], 'view_port_top_right': [4000.0,400.0,1200.0], 'base_position': [200, 1000, -200], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0,-400.0,-400.0], 'view_port_top_right': [4000.0,400.0,400.0], 'base_position': [-200, 1000, -200], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-400.0,-400.0], 'view_port_top_right': [0.0,400.0,400.0], 'base_position': [200, 1000, -200], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_minus_x_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,-400.0,-1200.0], 'view_port_top_right': [0.0,400.0,-400.0], 'base_position': [-200, 1000, -800], 'object_center': [0,0,0]},
+          {'blockid': 'sphere_cylindar_z_minus_x_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,-400.0,-1200.0], 'view_port_top_right': [4000.0,400.0,-400.0], 'base_position': [200, 1000, -800], 'object_center': [0,0,0]},
 
-          {'blockid': 'cylindar_y0_z_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,400.0], 'view_port_top_right': [4000.0,1200.0,1200.0], 'base_position': [0, 400, -400], 'object_center': [0,0,0]},
-          {'blockid': 'cylindar_y0_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,400.0,-400.0], 'view_port_top_right': [0.0,1200.0,400.0], 'base_position': [0, 1600, 0], 'object_center': [0,0,0]},
-          {'blockid': 'cylindar_y0_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,400.0,-400.0], 'view_port_top_right': [4000.0,1200.0,400.0], 'base_position': [0, 1600, 0], 'object_center': [0,0,0]},
-          {'blockid': 'cylindar_y0_z_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,-1200.0], 'view_port_top_right': [4000.0,1200.0,-400.0], 'base_position': [0, 1600, -400], 'object_center': [0,0,0]},
+          {'blockid': 'cylindar_y0_z_plus_xplus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,400.0,400.0], 'view_port_top_right': [4000.0,1200.0,1200.0], 'base_position': [-200, 1800, -200], 'object_center': [0,0,0]},
+          {'blockid': 'cylindar_y0_z_plus_xminus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,400.0], 'view_port_top_right': [0.0,1200.0,1200.0], 'base_position': [200, 1800, -200], 'object_center': [0,0,0]},
+          {'blockid': 'cylindar_y0_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,400.0,-400.0], 'view_port_top_right': [4000.0,1200.0,400.0], 'base_position': [-200, 1800, -200], 'object_center': [0,0,0]},
+          {'blockid': 'cylindar_y0_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,400.0,-400.0], 'view_port_top_right': [0.0,1200.0,400.0], 'base_position': [200, 1800, -200], 'object_center': [0,0,0]},
+          {'blockid': 'cylindar_y0_z_minus_x_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,400.0,-1200.0], 'view_port_top_right': [4000.0,1200.0,-400.0], 'base_position': [-200, 1800, -800], 'object_center': [0,0,0]},
+          {'blockid': 'cylindar_y0_z_minus_x_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,-1200.0], 'view_port_top_right': [0.0,1200.0,-400.0], 'base_position': [200, 1800, -800], 'object_center': [0,0,0]},
           ]
 
+blocks = [
+          {'blockid': 'cylindar_y0_z_plus_xplus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,400.0,400.0], 'view_port_top_right': [4000.0,1200.0,1200.0], 'base_position': [-200, 1800, -200], 'object_center': [0,0,0]},
+         ]
 for b in blocks:
     print("blockid: %s" % b['blockid'])
-    sweeper=ut.surface_sweeper({'sweep_width': 30.0, 'max_vertex_variance': 0.001, 'max_sweep_line_variance': 2.0,
+    sweeper=ut.surface_sweeper({'sweep_width': 60.0, 'max_vertex_variance': 0.001, 'max_sweep_line_variance': 2.0,
                                 'sweep_direction': b['sweep_direction'], 'slice_direction': b['slice_direction'], 
-                                'wire_join_max_distance': 10, 'path_extension_distance': 10.0, 'object_center': b['object_center']})
+                                'wire_join_max_distance': 20, 'path_extension_distance': 10.0, 'object_center': b['object_center']})
     vp_bf=b['view_port_bottom_left']
     vp_tr=b['view_port_top_right']
     front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(vp_bf[0], vp_bf[1], vp_bf[2]), gp_Pnt(vp_tr[0], vp_tr[1], vp_tr[2]))
     long_slice = get_longest_slice(front_face, sweeper.sweep_width)
-    sweep_wires_upside = sweeper.sweep_face(front_face, long_slice, 'up')
     sweep_wires_downside = sweeper.sweep_face(front_face, long_slice, 'down')
+    sweep_wires_upside = sweeper.sweep_face(front_face, long_slice, 'up')
     del sweep_wires_downside[0]
     sweep_wires = sweep_wires_upside + sweep_wires_downside
     xmin, ymin, Zmin, xmax, ymax, Zmax = sweeper.get_shape_boundary(sweep_wires)

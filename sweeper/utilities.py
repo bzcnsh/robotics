@@ -359,22 +359,23 @@ class surface_sweeper:
             wire = self.extend_wire(wire, length, "end")
             return wire
 
-    def get_strip_boundary(self, aShape, spine):
+    def get_strip_boundary(self, aShape, spine, begin=0):
         pipe = OCC.BRepOffsetAPI.BRepOffsetAPI_MakePipeShell(spine)
         pipe.SetTransitionMode(OCC.BRepBuilderAPI.BRepBuilderAPI_RoundCorner)
-        for v in self.get_ordered_vertices_from_wire(spine):
-            brt = OCC.BRep.BRep_Tool()
-            pnt = brt.Pnt(v)
-            circle = OCC.gp.gp_Circ(OCC.gp.gp_Ax2(pnt, OCC.gp.gp_DZ()), self.sweep_width)
-            profile_edge = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeWire(OCC.BRepBuilderAPI.BRepBuilderAPI_MakeEdge(circle).Edge())
-            pipe.Add(profile_edge.Shape(), False, True)
-            break
+        vertices = list(self.get_ordered_vertices_from_wire(spine))
+        v = vertices[begin]
+        brt = OCC.BRep.BRep_Tool()
+        pnt = brt.Pnt(v)
+        circle = OCC.gp.gp_Circ(OCC.gp.gp_Ax2(pnt, OCC.gp.gp_DZ()), self.sweep_width)
+        profile_edge = OCC.BRepBuilderAPI.BRepBuilderAPI_MakeWire(OCC.BRepBuilderAPI.BRepBuilderAPI_MakeEdge(circle).Edge())
+        pipe.Add(profile_edge.Shape(), False, True)
         pipe.Build()
         while not pipe.IsDone():
             print("waiting for pipe")
             time.sleep(0.01)
         section = OCC.BRepAlgoAPI.BRepAlgoAPI_Section(pipe.Shape(), aShape)
-        #section.Approximation(False)
+        #section.Approximation(True)
+        section.Approximation(False)
         section.Build()
         while not section.IsDone():
             print("getStripBoundary", "waiting for section")
@@ -436,7 +437,7 @@ class surface_sweeper:
             for wire in joined_section_wires:
                 wire = self.reduce_wire_edge(wire)
                 extended_wires = self.extend_wire(wire, self.path_extension_distance, "both")
-                section = self.get_strip_boundary(aFace, extended_wires)
+                section = self.get_strip_boundary(aFace, extended_wires, 1)
                 if section:
                     sections.append(section)
             sweep_wires = sweep_wires + joined_section_wires
@@ -493,3 +494,10 @@ class surface_sweeper:
         bf.Normal(bounds[0],bounds[1],pt,vec)
         direction = OCC.gp.gp_Dir(vec)
         return direction
+
+    def get_edges_length(self, aShape):
+        t_length = 0
+        for e in OCCUtils.Topo(aShape).edges():
+            oe = OCCUtils.edge.Edge(e)
+            t_length += oe.length()
+        return t_length
