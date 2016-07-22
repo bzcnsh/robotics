@@ -170,9 +170,6 @@ blocks = [
           {'blockid': 'cylindar_y0_z_minus_x_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,-1200.0], 'view_port_top_right': [0.0,1200.0,-400.0], 'base_position': [200, 1800, -800], 'object_center': [0,0,0]},
           ]
 
-blocks = [
-          {'blockid': 'cylindar_y0_z_plus_xplus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,400.0,400.0], 'view_port_top_right': [4000.0,1200.0,1200.0], 'base_position': [-200, 1800, -200], 'object_center': [0,0,0]},
-         ]
 for b in blocks:
     print("blockid: %s" % b['blockid'])
     sweeper=ut.surface_sweeper({'sweep_width': 60.0, 'max_vertex_variance': 0.001, 'max_sweep_line_variance': 2.0,
