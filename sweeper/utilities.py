@@ -27,7 +27,7 @@ class surface_sweeper:
         if parameters.has_key('sweep_surface'): self.sweep_surface = parameters['sweep_surface']
         if parameters.has_key('wire_join_max_distance'): self.wire_join_max_distance = parameters['wire_join_max_distance']
         if parameters.has_key('path_extension_distance'): self.path_extension_distance = parameters['path_extension_distance']
-        if parameters.has_key('object_center'): self.object_center = parameters['object_center']
+        if parameters.has_key('base_position'): self.base_position = parameters['base_position']
 
     #reduce number of vertices on a wire, to smoothen robotic arm's movement
     def reduce_wire_edge(self, wire):
