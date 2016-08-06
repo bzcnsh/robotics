@@ -434,8 +434,8 @@ class surface_sweeper:
             print("direction: %s, xmin: %f, ymin: %f, zmin: %f, xmax: %f, ymax: %f, zmax: %f" % (up_or_down, xmin, ymin, zmin, xmax, ymax, zmax))
         
             sections = []
+            joined_section_wires = map(self.reduce_wire_edge, joined_section_wires)
             for wire in joined_section_wires:
-                wire = self.reduce_wire_edge(wire)
                 extended_wires = self.extend_wire(wire, self.path_extension_distance, "both")
                 section = self.get_strip_boundary(aFace, extended_wires, 1)
                 if section:

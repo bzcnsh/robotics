@@ -108,6 +108,12 @@ class UtilitiesTestCase(unittest.TestCase):
              [4.0,  1.0,    0.0],
              [5.0,  -1.0,    0.0],
              [8.0,  0.0,    0.0]]
+        d1 = [[-917.842182862, 400.0, -400.0],
+              [-917.951775128, 588.713049476, -400.0],
+              [-918.306774567, 1200.0, -400.0]]
+        d1_r = [[-917.842182862, 400.0, -400.0],
+              [-918.306774567, 1200.0, -400.0]]
+
         p_027 = p
         p_028 = p_090
         w = self.sweeper.make_wire_from_point_list(p)
@@ -125,6 +131,9 @@ class UtilitiesTestCase(unittest.TestCase):
         setattr(self.sweeper, 'max_sweep_line_variance', 0.28)
         r = self.sweeper.reduce_wire_edge(w)
         assert self.sweeper.is_equal_wire(w_028, r), "problem in reduce_wire_edge with variance==0.28"
+        w1 = self.sweeper.reduce_wire_edge(self.sweeper.make_wire_from_point_list(d1))
+        w1_r = self.sweeper.make_wire_from_point_list(d1_r)
+        assert self.sweeper.is_equal_wire(w1_r, w1), "problem in reduce_wire_edge with only 2 edges"
     
     def test_join_nearby_edges(self):
         p=[
@@ -312,8 +321,10 @@ class UtilitiesTestCase(unittest.TestCase):
            [2.0, 1.0, 1.0],
            [3.0, 0.0, 0.0]]
         p_extended = [[-1.0, -1.0, -1.0],
+                      [0.0, 0.0, 0.0],
                       [1.0, 1.0, 1.0],
                       [2.0, 1.0, 1.0],
+                      [3.0, 0.0, 0.0],
                       [4.0, -1.0, -1.0]]
         setattr(self.sweeper, 'sweep_direction', 'x')
         w = self.sweeper.make_wire_from_point_list(p)

@@ -148,26 +148,26 @@ logging_functions = ["get_wires_from_section", "merge_nearby_edges", "getStripBo
 object_name='full-cylindar-sphere-top-from-rhino'
 #work item is in bound by box [-1000, -1000, -1000[, [1000, 2000, 1000]
 blocks = [
-          {'blockid': 'sphere_z_plus_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,400.0], 'view_port_top_right': [4000.0,-400.0,1200.0], 'base_position': [-200, 300, -200]},
-          {'blockid': 'sphere_z_plus_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,400.0], 'view_port_top_right': [0.0,-400.0,1200.0], 'base_position': [200, 300, -200]},
-          {'blockid': 'sphere_z_middle_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,-400.0], 'view_port_top_right': [4000.0,-400.0,400.0], 'base_position': [-200, 300, -200]},
-          {'blockid': 'sphere_z_middle_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-400.0], 'view_port_top_right': [0.0,-400.0,400.0], 'base_position': [200, 300, -200]},
-          {'blockid': 'sphere_z_minus_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,-1200.0], 'view_port_top_right': [4000.0,-400.0,-400.0], 'base_position': [-200, 300, -800]},
-          {'blockid': 'sphere_z_minus_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-1200.0,-1200.0], 'view_port_top_right': [0.0,-400.0,-400.0], 'base_position': [200, 300, -800]},
+          {'blockid': 'sphere_z_plus_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,400.0], 'view_port_top_right': [1200.0,-400.0,1200.0], 'base_position': [-200, 300, -200]},
+          {'blockid': 'sphere_z_plus_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-1200.0,-1200.0,400.0], 'view_port_top_right': [0.0,-400.0,1200.0], 'base_position': [200, 300, -200]},
+          {'blockid': 'sphere_z_middle_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,-400.0], 'view_port_top_right': [1200.0,-400.0,400.0], 'base_position': [-200, 300, -200]},
+          {'blockid': 'sphere_z_middle_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-1200.0,-1200.0,-400.0], 'view_port_top_right': [0.0,-400.0,400.0], 'base_position': [200, 300, -200]},
+          {'blockid': 'sphere_z_minus_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,-1200.0], 'view_port_top_right': [1200.0,-400.0,-400.0], 'base_position': [-200, 300, -800]},
+          {'blockid': 'sphere_z_minus_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-1200.0,-1200.0,-1200.0], 'view_port_top_right': [0.0,-400.0,-400.0], 'base_position': [200, 300, -800]},
 
-          {'blockid': 'sphere_cylindar_z_plus_x_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,-400.0,400.0], 'view_port_top_right': [4000.0,400.0,1200.0], 'base_position': [-200, 800, -200]},
-          {'blockid': 'sphere_cylindar_z_plus_x_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,-400.0,400.0], 'view_port_top_right': [0.0,400.0,1200.0], 'base_position': [200, 800, -200]},
-          {'blockid': 'sphere_cylindar_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0,-400.0,-400.0], 'view_port_top_right': [4000.0,400.0,400.0], 'base_position': [-200, 800, -200]},
-          {'blockid': 'sphere_cylindar_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,-400.0,-400.0], 'view_port_top_right': [0.0,400.0,400.0], 'base_position': [200, 800, -200]},
-          {'blockid': 'sphere_cylindar_z_minus_x_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,-400.0,-1200.0], 'view_port_top_right': [4000.0,400.0,-400.0], 'base_position': [-200, 800, -800]},
-          {'blockid': 'sphere_cylindar_z_minus_x_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,-400.0,-1200.0], 'view_port_top_right': [0.0,400.0,-400.0], 'base_position': [200, 800, -800]},
+          {'blockid': 'sphere_cylindar_z_plus_x_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,-400.0,400.0], 'view_port_top_right': [1200.0,400.0,1200.0], 'base_position': [-200, 800, -200]},
+          {'blockid': 'sphere_cylindar_z_plus_x_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-1200.0,-400.0,400.0], 'view_port_top_right': [0.0,400.0,1200.0], 'base_position': [200, 800, -200]},
+          {'blockid': 'sphere_cylindar_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0,-400.0,-400.0], 'view_port_top_right': [1200.0,400.0,400.0], 'base_position': [-200, 600, -200]},
+          {'blockid': 'sphere_cylindar_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-1200.0,-400.0,-400.0], 'view_port_top_right': [0.0,400.0,400.0], 'base_position': [200, 600, -200]},
+          {'blockid': 'sphere_cylindar_z_minus_x_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,-400.0,-1200.0], 'view_port_top_right': [1200.0,400.0,-400.0], 'base_position': [-200, 800, -800]},
+          {'blockid': 'sphere_cylindar_z_minus_x_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-1200.0,-400.0,-1200.0], 'view_port_top_right': [0.0,400.0,-400.0], 'base_position': [200, 800, -800]},
 
-          {'blockid': 'cylindar_y0_z_plus_xplus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,400.0,400.0], 'view_port_top_right': [4000.0,1200.0,1200.0], 'base_position': [-200, 1600, -200]},
-          {'blockid': 'cylindar_y0_z_plus_xminus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,400.0], 'view_port_top_right': [0.0,1200.0,1200.0], 'base_position': [200, 1600, -200]},
-          {'blockid': 'cylindar_y0_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,400.0,-400.0], 'view_port_top_right': [4000.0,1200.0,400.0], 'base_position': [-200, 1600, -200]},
-          {'blockid': 'cylindar_y0_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-4000.0,400.0,-400.0], 'view_port_top_right': [0.0,1200.0,400.0], 'base_position': [200, 1600, -200]},
-          {'blockid': 'cylindar_y0_z_minus_x_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,400.0,-1200.0], 'view_port_top_right': [4000.0,1200.0,-400.0], 'base_position': [-200, 1600, -800]},
-          {'blockid': 'cylindar_y0_z_minus_x_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-4000.0,400.0,-1200.0], 'view_port_top_right': [0.0,1200.0,-400.0], 'base_position': [200, 1600, -800]},
+          {'blockid': 'cylindar_y0_z_plus_xplus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,400.0,400.0], 'view_port_top_right': [1200.0,1200.0,1200.0], 'base_position': [-200, 1400, -200]},
+          {'blockid': 'cylindar_y0_z_plus_xminus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-1200.0,400.0,400.0], 'view_port_top_right': [0.0,1200.0,1200.0], 'base_position': [200, 1400, -200]},
+          {'blockid': 'cylindar_y0_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,400.0,-400.0], 'view_port_top_right': [1200.0,1200.0,400.0], 'base_position': [-200, 1400, -200]},
+          {'blockid': 'cylindar_y0_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-1200.0,400.0,-400.0], 'view_port_top_right': [0.0,1200.0,400.0], 'base_position': [200, 1400, -200]},
+          {'blockid': 'cylindar_y0_z_minus_x_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,400.0,-1200.0], 'view_port_top_right': [1200.0,1200.0,-400.0], 'base_position': [-200, 1600, -800]},
+          {'blockid': 'cylindar_y0_z_minus_x_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-1200.0,400.0,-1200.0], 'view_port_top_right': [0.0,1200.0,-400.0], 'base_position': [200, 1600, -800]},
           ]
 
 for b in blocks:
