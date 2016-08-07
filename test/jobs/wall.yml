@@ -1,0 +1,25 @@
+object_name: wall
+object_file: ../scans/wall-post-meshlab-rhino.stl
+output_dir: curves
+job_settings:
+  max_sweep_line_variance: 2.0
+  max_vertex_variance: 0.001
+  path_extension_distance: 10.0
+  sweep_width: 60.0
+  wire_join_max_distance: 20
+blocks:
+- base_position:
+  - 0
+  - 0
+  - 0
+  blockid: x
+  slice_direction: z
+  sweep_direction: y
+  view_port_bottom_left:
+  - -400.0
+  - -400.0
+  - -400.0
+  view_port_top_right:
+  - -2000.0
+  - 400.0
+  - 400.0
