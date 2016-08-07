@@ -2,22 +2,16 @@ from OCC.Display.SimpleGui import init_display
 from OCC.TopoDS import (TopoDS_Shape, topods_Vertex)
 from OCC.StlAPI import StlAPI_Reader
 
-from OCC.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut
-from OCC.BRepBuilderAPI import BRepBuilderAPI_MakeFace, BRepBuilderAPI_Transform, BRepBuilderAPI_RoundCorner, BRepBuilderAPI_RightCorner, BRepBuilderAPI_Transformed
-from OCC.BRepPrimAPI import BRepPrimAPI_MakeBox, BRepPrimAPI_MakeWedge, BRepPrimAPI_MakeSphere, BRepPrimAPI_MakeTorus
-from OCC.gp import gp_Vec, gp_Ax2, gp_Pnt, gp_Dir, gp_Pln, gp_Trsf, gp_Circ, gp
+from OCC.BRepAlgoAPI import BRepAlgoAPI_Common
+from OCC.BRepPrimAPI import BRepPrimAPI_MakeBox
+from OCC.gp import gp_Pnt
 from OCC.BRep import BRep_Tool
 
 from OCCUtils import Topo, Common, edge
-from OCCUtils.Topology import WireExplorer
 import OCC
 import OCCUtils
 import time
-from OCC.BRepOffsetAPI import BRepOffsetAPI_MakePipe, BRepOffsetAPI_MakePipeShell
-from OCC.BRepExtrema import BRepExtrema_DistShapeShape
-from OCC.TopTools import TopTools_ListOfShape
 from pprint import pprint
-from OCC.BRepGProp import BRepGProp_Face
 from OCC.TopAbs import (TopAbs_VERTEX, TopAbs_EDGE, TopAbs_FACE, TopAbs_WIRE,
                         TopAbs_SHELL, TopAbs_SOLID, TopAbs_COMPOUND,
                         TopAbs_COMPSOLID)
@@ -30,6 +24,7 @@ import numpy
 import scipy.linalg
 
 import sys
+import getopt
 
 sys.path.append('../')
 import sweeper.utilities as ut
@@ -152,7 +147,17 @@ display, start_display, add_menu, add_function_to_menu = init_display()
 
 logging_functions = ["get_wires_from_section", "merge_nearby_edges", "getStripBoundary", "sweep_face", "reduce_wire_edge"]
 #object_name='full-cylindar-sphere-top-from-rhino'
-job = read_yaml("jobs/full-cylindar-sphere-top-from-rhino.yml")
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], 'j:')
+except getopt.GetoptError:
+      print 'missing job file from command line'
+      sys.exit(2)
+#job = read_yaml("jobs/full-cylindar-sphere-top-from-rhino.yml")
+for opt, arg in opts:
+      if opt == '-j':
+         job_file = arg
+job = read_yaml(job_file)
 
 #work item is in bound by box [-1000, -1000, -1000[, [1000, 2000, 1000]
 blocks = job['blocks'];
