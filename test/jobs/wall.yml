@@ -5,11 +5,11 @@ job_settings:
   max_sweep_line_variance: 2.0
   max_vertex_variance: 0.001
   path_extension_distance: 10.0
-  sweep_width: 60.0
+  sweep_width: 30.0
   wire_join_max_distance: 20
 blocks:
 - base_position:
-  - 0
+  - -400
   - 0
   - 0
   blockid: x
