@@ -34,6 +34,12 @@ import sys
 sys.path.append('../')
 import sweeper.utilities as ut
 
+def read_yaml(filename):
+   stream = open(filename, 'r')
+   data = yaml.load(stream)
+   stream.close()
+   return data
+
 def show_log(function, message):
     if function in logging_functions:
         print("%s  %s: %s" % (function, datetime.datetime.now(), message))
@@ -145,39 +151,21 @@ def format_wire_for_roboDK(wire, is_reverse=False):
 display, start_display, add_menu, add_function_to_menu = init_display()
 
 logging_functions = ["get_wires_from_section", "merge_nearby_edges", "getStripBoundary", "sweep_face", "reduce_wire_edge"]
-object_name='full-cylindar-sphere-top-from-rhino'
+#object_name='full-cylindar-sphere-top-from-rhino'
+job = read_yaml("jobs/full-cylindar-sphere-top-from-rhino.yml")
+
 #work item is in bound by box [-1000, -1000, -1000[, [1000, 2000, 1000]
-blocks = [
-          {'blockid': 'sphere_z_plus_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,400.0], 'view_port_top_right': [1200.0,-400.0,1200.0], 'base_position': [-200, 300, -200]},
-          {'blockid': 'sphere_z_plus_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-1200.0,-1200.0,400.0], 'view_port_top_right': [0.0,-400.0,1200.0], 'base_position': [200, 300, -200]},
-          {'blockid': 'sphere_z_middle_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,-400.0], 'view_port_top_right': [1200.0,-400.0,400.0], 'base_position': [-200, 300, -200]},
-          {'blockid': 'sphere_z_middle_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-1200.0,-1200.0,-400.0], 'view_port_top_right': [0.0,-400.0,400.0], 'base_position': [200, 300, -200]},
-          {'blockid': 'sphere_z_minus_x_plus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,-1200.0,-1200.0], 'view_port_top_right': [1200.0,-400.0,-400.0], 'base_position': [-200, 300, -800]},
-          {'blockid': 'sphere_z_minus_x_minus', 'sweep_direction': 'x', 'slice_direction': 'z', 'view_port_bottom_left':[-1200.0,-1200.0,-1200.0], 'view_port_top_right': [0.0,-400.0,-400.0], 'base_position': [200, 300, -800]},
-
-          {'blockid': 'sphere_cylindar_z_plus_x_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,-400.0,400.0], 'view_port_top_right': [1200.0,400.0,1200.0], 'base_position': [-200, 800, -200]},
-          {'blockid': 'sphere_cylindar_z_plus_x_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-1200.0,-400.0,400.0], 'view_port_top_right': [0.0,400.0,1200.0], 'base_position': [200, 800, -200]},
-          {'blockid': 'sphere_cylindar_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0,-400.0,-400.0], 'view_port_top_right': [1200.0,400.0,400.0], 'base_position': [-200, 600, -200]},
-          {'blockid': 'sphere_cylindar_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-1200.0,-400.0,-400.0], 'view_port_top_right': [0.0,400.0,400.0], 'base_position': [200, 600, -200]},
-          {'blockid': 'sphere_cylindar_z_minus_x_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,-400.0,-1200.0], 'view_port_top_right': [1200.0,400.0,-400.0], 'base_position': [-200, 800, -800]},
-          {'blockid': 'sphere_cylindar_z_minus_x_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-1200.0,-400.0,-1200.0], 'view_port_top_right': [0.0,400.0,-400.0], 'base_position': [200, 800, -800]},
-
-          {'blockid': 'cylindar_y0_z_plus_xplus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,400.0,400.0], 'view_port_top_right': [1200.0,1200.0,1200.0], 'base_position': [-200, 1400, -200]},
-          {'blockid': 'cylindar_y0_z_plus_xminus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-1200.0,400.0,400.0], 'view_port_top_right': [0.0,1200.0,1200.0], 'base_position': [200, 1400, -200]},
-          {'blockid': 'cylindar_y0_z_middle_x_plus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[0.0,400.0,-400.0], 'view_port_top_right': [1200.0,1200.0,400.0], 'base_position': [-200, 1400, -200]},
-          {'blockid': 'cylindar_y0_z_middle_x_minus', 'sweep_direction': 'y', 'slice_direction': 'z', 'view_port_bottom_left':[-1200.0,400.0,-400.0], 'view_port_top_right': [0.0,1200.0,400.0], 'base_position': [200, 1400, -200]},
-          {'blockid': 'cylindar_y0_z_minus_x_plus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[0.0,400.0,-1200.0], 'view_port_top_right': [1200.0,1200.0,-400.0], 'base_position': [-200, 1600, -800]},
-          {'blockid': 'cylindar_y0_z_minus_x_minus', 'sweep_direction': 'y', 'slice_direction': 'x', 'view_port_bottom_left':[-1200.0,400.0,-1200.0], 'view_port_top_right': [0.0,1200.0,-400.0], 'base_position': [200, 1600, -800]},
-          ]
+blocks = job['blocks'];
 
 for b in blocks:
     print("blockid: %s" % b['blockid'])
-    sweeper=ut.surface_sweeper({'sweep_width': 60.0, 'max_vertex_variance': 0.001, 'max_sweep_line_variance': 2.0,
-                                'sweep_direction': b['sweep_direction'], 'slice_direction': b['slice_direction'], 
-                                'wire_join_max_distance': 20, 'path_extension_distance': 10.0, 'base_position': b['base_position']})
+    settings = job['job_settings']
+    for i in b.keys():
+        settings[i] = b[i]
+        sweeper=ut.surface_sweeper(settings)
     vp_bf=b['view_port_bottom_left']
     vp_tr=b['view_port_top_right']
-    front_face = get_front_surface('../freeCAD/'+object_name+'.stl', gp_Pnt(vp_bf[0], vp_bf[1], vp_bf[2]), gp_Pnt(vp_tr[0], vp_tr[1], vp_tr[2]))
+    front_face = get_front_surface(job['object_file'], gp_Pnt(vp_bf[0], vp_bf[1], vp_bf[2]), gp_Pnt(vp_tr[0], vp_tr[1], vp_tr[2]))
     long_slice = get_longest_slice(front_face, sweeper.sweep_width)
     sweep_wires_downside = sweeper.sweep_face(front_face, long_slice, 'down')
     sweep_wires_upside = sweeper.sweep_face(front_face, long_slice, 'up')
@@ -197,11 +185,11 @@ for b in blocks:
         
         display.DisplayShape(w)
     
-    outstream = open('./curves/'+object_name+b['blockid']+'.yml', 'w')
+    outstream = open(job['output_dir'] + '/' + job['object_name']+b['blockid']+'.yml', 'w')
     yaml.dump(wires_roboDK, outstream, default_flow_style=False)
     outstream.close()
     
-    with open('./curves/'+object_name+b['blockid']+'.csv', 'w') as csv_outstream:
+    with open(job['output_dir'] + '/' + job['object_name'] + b['blockid']+'.csv', 'w') as csv_outstream:
         for w in wires_roboDK['wires']:
             for v in w:
                 location = v['location']

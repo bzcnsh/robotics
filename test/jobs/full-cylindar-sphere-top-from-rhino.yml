@@ -1,0 +1,280 @@
+object_name: full-cylindar-sphere-top-from-rhino
+object_file: ../freeCAD/full-cylindar-sphere-top-from-rhino.stl
+output_dir: curves
+job_settings:
+  max_sweep_line_variance: 2.0
+  max_vertex_variance: 0.001
+  path_extension_distance: 10.0
+  sweep_width: 60.0
+  wire_join_max_distance: 20
+blocks:
+- base_position:
+  - -200
+  - 300
+  - -200
+  blockid: sphere_z_plus_x_plus
+  slice_direction: z
+  sweep_direction: x
+  view_port_bottom_left:
+  - 0.0
+  - -1200.0
+  - 400.0
+  view_port_top_right:
+  - 1200.0
+  - -400.0
+  - 1200.0
+- base_position:
+  - 200
+  - 300
+  - -200
+  blockid: sphere_z_plus_x_minus
+  slice_direction: z
+  sweep_direction: x
+  view_port_bottom_left:
+  - -1200.0
+  - -1200.0
+  - 400.0
+  view_port_top_right:
+  - 0.0
+  - -400.0
+  - 1200.0
+- base_position:
+  - -200
+  - 300
+  - -200
+  blockid: sphere_z_middle_x_plus
+  slice_direction: z
+  sweep_direction: x
+  view_port_bottom_left:
+  - 0.0
+  - -1200.0
+  - -400.0
+  view_port_top_right:
+  - 1200.0
+  - -400.0
+  - 400.0
+- base_position:
+  - 200
+  - 300
+  - -200
+  blockid: sphere_z_middle_x_minus
+  slice_direction: z
+  sweep_direction: x
+  view_port_bottom_left:
+  - -1200.0
+  - -1200.0
+  - -400.0
+  view_port_top_right:
+  - 0.0
+  - -400.0
+  - 400.0
+- base_position:
+  - -200
+  - 300
+  - -800
+  blockid: sphere_z_minus_x_plus
+  slice_direction: z
+  sweep_direction: x
+  view_port_bottom_left:
+  - 0.0
+  - -1200.0
+  - -1200.0
+  view_port_top_right:
+  - 1200.0
+  - -400.0
+  - -400.0
+- base_position:
+  - 200
+  - 300
+  - -800
+  blockid: sphere_z_minus_x_minus
+  slice_direction: z
+  sweep_direction: x
+  view_port_bottom_left:
+  - -1200.0
+  - -1200.0
+  - -1200.0
+  view_port_top_right:
+  - 0.0
+  - -400.0
+  - -400.0
+- base_position:
+  - -200
+  - 800
+  - -200
+  blockid: sphere_cylindar_z_plus_x_plus
+  slice_direction: x
+  sweep_direction: y
+  view_port_bottom_left:
+  - 0.0
+  - -400.0
+  - 400.0
+  view_port_top_right:
+  - 1200.0
+  - 400.0
+  - 1200.0
+- base_position:
+  - 200
+  - 800
+  - -200
+  blockid: sphere_cylindar_z_plus_x_minus
+  slice_direction: x
+  sweep_direction: y
+  view_port_bottom_left:
+  - -1200.0
+  - -400.0
+  - 400.0
+  view_port_top_right:
+  - 0.0
+  - 400.0
+  - 1200.0
+- base_position:
+  - -200
+  - 600
+  - -200
+  blockid: sphere_cylindar_z_middle_x_plus
+  slice_direction: z
+  sweep_direction: y
+  view_port_bottom_left:
+  - 0
+  - -400.0
+  - -400.0
+  view_port_top_right:
+  - 1200.0
+  - 400.0
+  - 400.0
+- base_position:
+  - 200
+  - 600
+  - -200
+  blockid: sphere_cylindar_z_middle_x_minus
+  slice_direction: z
+  sweep_direction: y
+  view_port_bottom_left:
+  - -1200.0
+  - -400.0
+  - -400.0
+  view_port_top_right:
+  - 0.0
+  - 400.0
+  - 400.0
+- base_position:
+  - -200
+  - 800
+  - -800
+  blockid: sphere_cylindar_z_minus_x_plus
+  slice_direction: x
+  sweep_direction: y
+  view_port_bottom_left:
+  - 0.0
+  - -400.0
+  - -1200.0
+  view_port_top_right:
+  - 1200.0
+  - 400.0
+  - -400.0
+- base_position:
+  - 200
+  - 800
+  - -800
+  blockid: sphere_cylindar_z_minus_x_minus
+  slice_direction: x
+  sweep_direction: y
+  view_port_bottom_left:
+  - -1200.0
+  - -400.0
+  - -1200.0
+  view_port_top_right:
+  - 0.0
+  - 400.0
+  - -400.0
+- base_position:
+  - -200
+  - 1400
+  - -200
+  blockid: cylindar_y0_z_plus_xplus
+  slice_direction: x
+  sweep_direction: y
+  view_port_bottom_left:
+  - 0.0
+  - 400.0
+  - 400.0
+  view_port_top_right:
+  - 1200.0
+  - 1200.0
+  - 1200.0
+- base_position:
+  - 200
+  - 1400
+  - -200
+  blockid: cylindar_y0_z_plus_xminus
+  slice_direction: x
+  sweep_direction: y
+  view_port_bottom_left:
+  - -1200.0
+  - 400.0
+  - 400.0
+  view_port_top_right:
+  - 0.0
+  - 1200.0
+  - 1200.0
+- base_position:
+  - -200
+  - 1400
+  - -200
+  blockid: cylindar_y0_z_middle_x_plus
+  slice_direction: z
+  sweep_direction: y
+  view_port_bottom_left:
+  - 0.0
+  - 400.0
+  - -400.0
+  view_port_top_right:
+  - 1200.0
+  - 1200.0
+  - 400.0
+- base_position:
+  - 200
+  - 1400
+  - -200
+  blockid: cylindar_y0_z_middle_x_minus
+  slice_direction: z
+  sweep_direction: y
+  view_port_bottom_left:
+  - -1200.0
+  - 400.0
+  - -400.0
+  view_port_top_right:
+  - 0.0
+  - 1200.0
+  - 400.0
+- base_position:
+  - -200
+  - 1600
+  - -800
+  blockid: cylindar_y0_z_minus_x_plus
+  slice_direction: x
+  sweep_direction: y
+  view_port_bottom_left:
+  - 0.0
+  - 400.0
+  - -1200.0
+  view_port_top_right:
+  - 1200.0
+  - 1200.0
+  - -400.0
+- base_position:
+  - 200
+  - 1600
+  - -800
+  blockid: cylindar_y0_z_minus_x_minus
+  slice_direction: x
+  sweep_direction: y
+  view_port_bottom_left:
+  - -1200.0
+  - 400.0
+  - -1200.0
+  view_port_top_right:
+  - 0.0
+  - 1200.0
+  - -400.0
